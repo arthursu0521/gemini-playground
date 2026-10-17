@@ -28,11 +28,11 @@ const languages = [
     { name: 'Korean (South Korea)', code: 'ko-KR' },
     { name: 'Polish (Poland)', code: 'pl-PL' },
     { name: 'Russian (Russia)', code: 'ru-RU' },
-    { name: 'Thai (Thailand)', code: 'th-TH' }
+    { name: 'Thai (Thailand)', code: 'th-TH' },
 ];
 
 function getLanguage(languageCode) {
-    return languages.find(lang => lang.code === languageCode);
+    return languages.find((lang) => lang.code === languageCode);
 }
 
-export { languages, getLanguage };
+export { getLanguage, languages };

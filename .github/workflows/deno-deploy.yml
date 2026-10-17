@@ -1,0 +1,54 @@
+# Optional: deploy to Deno Deploy with the CLI after CI passes on main.
+# Not needed if you connected the repository in the Deno Deploy console (it builds on every push).
+# Enable by adding the repository secret DENO_DEPLOY_TOKEN and the repository variables
+# DENO_DEPLOY_ORG and DENO_DEPLOY_APP. App environment variables (GEMINI_API_KEY, ...) live in
+# Deno Deploy, not in GitHub; the checkout never contains a .env file.
+name: Deploy to Deno Deploy
+
+on:
+    push:
+        branches: [main]
+    workflow_dispatch:
+
+permissions:
+    contents: read
+
+concurrency:
+    group: deno-deploy
+    cancel-in-progress: false
+
+jobs:
+    check-config:
+        runs-on: ubuntu-latest
+        outputs:
+            enabled: ${{ steps.check.outputs.enabled }}
+        steps:
+            - id: check
+              env:
+                  TOKEN: ${{ secrets.DENO_DEPLOY_TOKEN }}
+                  APP: ${{ vars.DENO_DEPLOY_APP }}
+              run: if [ -n "$TOKEN" ] && [ -n "$APP" ]; then echo "enabled=true"; else echo "enabled=false"; fi >> "$GITHUB_OUTPUT"
+
+    ci:
+        needs: check-config
+        if: needs.check-config.outputs.enabled == 'true'
+        uses: ./.github/workflows/ci.yml
+
+    deploy:
+        name: Deploy
+        needs: [ci, check-config]
+        if: needs.check-config.outputs.enabled == 'true'
+        runs-on: ubuntu-latest
+        timeout-minutes: 10
+        environment: production
+        steps:
+            - uses: actions/checkout@v4
+            - uses: denoland/setup-deno@v2
+              with:
+                  deno-version: v2.x
+            - name: deno deploy
+              env:
+                  DENO_DEPLOY_TOKEN: ${{ secrets.DENO_DEPLOY_TOKEN }}
+              run: >
+                  deno deploy --prod --non-interactive --json
+                  --org "${{ vars.DENO_DEPLOY_ORG }}" --app "${{ vars.DENO_DEPLOY_APP }}"

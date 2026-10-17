@@ -1,5 +1,89 @@
 {
     "tasks": {
-      "start": "deno run --allow-net --allow-read src/deno_index.ts"
-    }
+        "start": {
+            "description": "Run the server (loads .env when present)",
+            "command": "deno run --allow-net --allow-env --allow-read=./src/static,./.env src/deno_index.ts"
+        },
+        "dev": {
+            "description": "Run the server and restart on file changes",
+            "command": "deno run --watch --allow-net --allow-env --allow-read=./src/static,./.env src/deno_index.ts"
+        },
+        "test": {
+            "description": "Unit + integration tests (no browser)",
+            "command": "deno test --allow-net --allow-env --allow-read tests/server tests/frontend"
+        },
+        "test:e2e": {
+            "description": "End-to-end tests in headless Chrome against a mock Gemini server",
+            "command": "deno test --allow-net --allow-env --allow-read --allow-write --allow-run --allow-sys tests/e2e"
+        },
+        "smoke": {
+            "description": "Smoke test against the real Gemini API (uses GEMINI_API_KEY when set)",
+            "command": "deno run --allow-net --allow-env --allow-read scripts/smoke.ts"
+        },
+        "check": {
+            "description": "Format check, lint and type-check",
+            "command": "deno fmt --check && deno lint && deno check src tests scripts"
+        },
+        "ci": {
+            "description": "Everything CI runs",
+            "command": "deno task check && deno task test && deno task test:e2e"
+        },
+        "deploy:create": {
+            "description": "One-time: create the Deno Deploy app (prompts for org/app, records them in deno.json)",
+            "command": "deno deploy create --source local --runtime-mode dynamic --entrypoint src/deno_index.ts"
+        },
+        "deploy": {
+            "description": "Upload this directory to Deno Deploy (production). .env is never uploaded.",
+            "command": "deno deploy --prod"
+        },
+        "deploy:env": {
+            "description": "Upload variables from .env to Deno Deploy as app environment variables",
+            "command": "deno deploy env load .env"
+        }
+    },
+    "imports": {
+        "@astral/astral": "jsr:@astral/astral@^0.5.6",
+        "@std/assert": "jsr:@std/assert@^1.0.19",
+        "@std/dotenv": "jsr:@std/dotenv@^0.225.8",
+        "@std/encoding": "jsr:@std/encoding@^1.0.11",
+        "@std/http": "jsr:@std/http@^1.1.4",
+        "@std/path": "jsr:@std/path@^1.1.6"
+    },
+    "compilerOptions": {
+        "checkJs": false,
+        "lib": [
+            "deno.window",
+            "dom",
+            "dom.iterable",
+            "dom.asynciterable"
+        ]
+    },
+    "fmt": {
+        "useTabs": false,
+        "indentWidth": 4,
+        "lineWidth": 120,
+        "singleQuote": true,
+        "proseWrap": "preserve",
+        "exclude": [
+            "README.MD",
+            "README_EN.MD",
+            "docs/"
+        ]
+    },
+    "lint": {
+        "rules": {
+            "tags": [
+                "recommended"
+            ]
+        }
+    },
+    "exclude": [
+        ".env",
+        ".env.local",
+        ".env.*.local",
+        ".env.production",
+        "node_modules/",
+        ".wrangler/",
+        "coverage/"
+    ]
 }

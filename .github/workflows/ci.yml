@@ -1,0 +1,39 @@
+name: CI
+
+on:
+    push:
+        branches: [main]
+    pull_request:
+    workflow_call:
+
+permissions:
+    contents: read
+
+concurrency:
+    # Includes the workflow name: when called from a deploy workflow it must not cancel the plain CI run.
+    group: ci-${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: true
+
+jobs:
+    test:
+        name: Check and test
+        runs-on: ubuntu-latest
+        timeout-minutes: 15
+        steps:
+            - uses: actions/checkout@v4
+
+            - uses: denoland/setup-deno@v2
+              with:
+                  deno-version: v2.x
+                  cache: true
+
+            - name: Format, lint, type-check
+              run: deno task check
+
+            - name: Unit and integration tests
+              run: deno task test
+
+            - name: End-to-end tests (headless Chrome)
+              run: deno task test:e2e
+              env:
+                  CHROME_PATH: /usr/bin/google-chrome

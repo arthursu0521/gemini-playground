@@ -1,131 +1,79 @@
-import { EventEmitter } from 'https://cdn.skypack.dev/eventemitter3';
-
+// @ts-check
 /**
- * @fileoverview A simple logger that logs messages to the console and emits events.
- * It also stores a limited number of logs in memory and provides a method to export them.
+ * @fileoverview Console logger with an in-memory ring buffer (exportable for bug reports).
+ * Values that look like credentials are masked before they are stored or printed.
  */
-export class Logger extends EventEmitter {
-    static instance = null;
+import { EventEmitter } from '../core/event-emitter.js';
+
+/** @typedef {'debug' | 'info' | 'warn' | 'error'} LogLevel */
+/** @typedef {{ timestamp: string, level: LogLevel, message: string, data?: unknown }} LogEntry */
+
+const SECRET_PATTERN = /AIza[0-9A-Za-z_-]{20,}/g;
+
+/** @param {unknown} data */
+function mask(data) {
+    if (data === undefined || data === null) return data;
+    if (data instanceof Error) return { name: data.name, message: data.message.replace(SECRET_PATTERN, '[KEY]') };
+    try {
+        return JSON.parse(JSON.stringify(data).replace(SECRET_PATTERN, '[KEY]'));
+    } catch {
+        return String(data);
+    }
+}
+
+export class Logger {
+    static events = new EventEmitter();
     static maxStoredLogs = 1000;
+    /** @type {LogEntry[]} */
     static logs = [];
+    static debugEnabled = false;
 
     /**
-     * Returns the singleton instance of the Logger.
-     *
-     * @returns {Logger} The Logger instance.
+     * @param {LogLevel} level
+     * @param {string} message
+     * @param {unknown} [data]
      */
-    static getInstance() {
-        if (!Logger.instance) {
-            Logger.instance = new Logger();
+    static log(level, message, data) {
+        /** @type {LogEntry} */
+        const entry = { timestamp: new Date().toISOString(), level, message, data: mask(data) };
+        Logger.logs.push(entry);
+        if (Logger.logs.length > Logger.maxStoredLogs) Logger.logs.shift();
+        if (level !== 'debug' || Logger.debugEnabled) {
+            const fn = level === 'error' ? console.error : level === 'warn' ? console.warn : console.log;
+            if (entry.data === undefined) fn(`[${level}] ${message}`);
+            else fn(`[${level}] ${message}`, entry.data);
         }
-        return Logger.instance;
+        Logger.events.emit('log', entry);
     }
 
-    /**
-     * Logs a message with the given level and optional data.
-     *
-     * @param {string} level - The log level (e.g., 'debug', 'info', 'warn', 'error').
-     * @param {string} message - The message to log.
-     * @param {Object} [data=null] - Optional data to include with the log.
-     */
-    static log(level, message, data = null) {
-        const logger = Logger.getInstance();
-        const timestamp = new Date().toISOString();
-        const logEntry = {
-            timestamp,
-            level,
-            message,
-            data
-        };
-
-        // Store log
-        Logger.logs.push(logEntry);
-        if (Logger.logs.length > Logger.maxStoredLogs) {
-            Logger.logs.shift();
-        }
-
-        // Console output
-        switch (level) {
-            case Logger.LEVELS.ERROR:
-                console.error(logEntry);
-                break;
-            case Logger.LEVELS.WARN:
-                console.warn(logEntry);
-                break;
-            case Logger.LEVELS.INFO:
-                console.info(logEntry);
-                break;
-            default:
-                console.log(logEntry);
-        }
-
-        // Emit event
-        logger.emit('log', logEntry);
+    /** @param {string} message @param {unknown} [data] */
+    static debug(message, data) {
+        Logger.log('debug', message, data);
     }
 
-    /**
-     * Exports the stored logs as a JSON file.
-     */
+    /** @param {string} message @param {unknown} [data] */
+    static info(message, data) {
+        Logger.log('info', message, data);
+    }
+
+    /** @param {string} message @param {unknown} [data] */
+    static warn(message, data) {
+        Logger.log('warn', message, data);
+    }
+
+    /** @param {string} message @param {unknown} [data] */
+    static error(message, data) {
+        Logger.log('error', message, data);
+    }
+
+    /** Downloads the stored logs as JSON. */
     static export() {
-        const blob = new Blob([JSON.stringify(Logger.logs, null, 2)], {
-            type: 'application/json'
-        });
+        const blob = new Blob([JSON.stringify(Logger.logs, null, 2)], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `logs-${new Date().toISOString()}.json`;
+        a.download = `gemini-playground-logs-${new Date().toISOString()}.json`;
         a.click();
-        URL.revokeObjectURL(url);
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
     }
-
-    /**
-     * Log levels.
-     * @enum {string}
-     */
-    static LEVELS = {
-        DEBUG: 'debug',
-        INFO: 'info',
-        WARN: 'warn',
-        ERROR: 'error'
-    };
-
-    /**
-     * Logs a debug message.
-     *
-     * @param {string} message - The message to log.
-     * @param {Object} [data] - Optional data to include with the log.
-     */
-    static debug(message, data) {
-        this.log(this.LEVELS.DEBUG, message, data);
-    }
-
-    /**
-     * Logs an info message.
-     *
-     * @param {string} message - The message to log.
-     * @param {Object} [data] - Optional data to include with the log.
-     */
-    static info(message, data) {
-        this.log(this.LEVELS.INFO, message, data);
-    }
-
-    /**
-     * Logs a warning message.
-     *
-     * @param {string} message - The message to log.
-     * @param {Object} [data] - Optional data to include with the log.
-     */
-    static warn(message, data) {
-        this.log(this.LEVELS.WARN, message, data);
-    }
-
-    /**
-     * Logs an error message.
-     *
-     * @param {string} message - The message to log.
-     * @param {Object} [data] - Optional data to include with the log.
-     */
-    static error(message, data) {
-        this.log(this.LEVELS.ERROR, message, data);
-    }
-} 
+}

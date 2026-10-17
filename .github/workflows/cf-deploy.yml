@@ -1,18 +1,48 @@
-name: Deploy Worker
+# Deploys to Cloudflare Workers after CI passes on main.
+# Runs only when the repository secret CF_API_TOKEN (and CF_ACCOUNT_ID) is configured,
+# so forks and pull requests never deploy. Worker secrets (GEMINI_API_KEY, ACCESS_PASSWORD)
+# are managed with `wrangler secret put`, never stored in this repository.
+name: Deploy to Cloudflare Workers
+
 on:
-  push:
-    branches:
-      - main
-  pull_request:
-  repository_dispatch:
+    push:
+        branches: [main]
+    workflow_dispatch:
+
+permissions:
+    contents: read
+
+concurrency:
+    group: cf-deploy
+    cancel-in-progress: false
+
 jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    name: Deploy
-    steps:
-      - uses: actions/checkout@v4
-      - name: Build & Deploy Worker
-        uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: ${{ secrets.CF_API_TOKEN }}
-          accountId: ${{ secrets.CF_ACCOUNT_ID }}
+    check-config:
+        runs-on: ubuntu-latest
+        outputs:
+            enabled: ${{ steps.check.outputs.enabled }}
+        steps:
+            - id: check
+              env:
+                  CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+              run: if [ -n "$CF_API_TOKEN" ]; then echo "enabled=true"; else echo "enabled=false"; fi >> "$GITHUB_OUTPUT"
+
+    ci:
+        needs: check-config
+        if: needs.check-config.outputs.enabled == 'true'
+        uses: ./.github/workflows/ci.yml
+
+    deploy:
+        name: Deploy
+        needs: [ci, check-config]
+        if: needs.check-config.outputs.enabled == 'true'
+        runs-on: ubuntu-latest
+        timeout-minutes: 10
+        environment: production
+        steps:
+            - uses: actions/checkout@v4
+            - uses: cloudflare/wrangler-action@v3
+              with:
+                  wranglerVersion: '4'
+                  apiToken: ${{ secrets.CF_API_TOKEN }}
+                  accountId: ${{ secrets.CF_ACCOUNT_ID }}
