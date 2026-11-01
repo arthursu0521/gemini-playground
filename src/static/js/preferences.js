@@ -234,8 +234,20 @@ function refresh() {
             el.textContent = new Intl.DisplayNames([language], { type: 'language' }).of(code);
         } catch { /* retain name */ }
     }
-    for (const el of document.querySelectorAll('[data-ui-language]')) el.value = language;
-    for (const el of document.querySelectorAll('[data-ui-theme]')) el.value = theme;
+    for (const el of document.querySelectorAll('[data-ui-language]')) {
+        el.dataset.state = language;
+        el.textContent = language === 'en' ? 'English' : '简体中文';
+        const label = `${t('Interface language')}: ${el.textContent}`;
+        el.setAttribute('aria-label', label);
+        el.title = label;
+    }
+    for (const el of document.querySelectorAll('[data-ui-theme]')) {
+        el.dataset.state = theme;
+        el.textContent = t({ system: 'Follow system', light: 'Light', dark: 'Dark' }[theme]);
+        const label = `${t('Appearance')}: ${el.textContent}`;
+        el.setAttribute('aria-label', label);
+        el.title = label;
+    }
     const logs = document.getElementById('logs-container');
     if (logs) {
         logs.dataset.emptyTitle = t('A conversation starts here');
@@ -251,15 +263,16 @@ export function initPreferences() {
     };
     media.addEventListener('change', applyTheme);
     for (const el of document.querySelectorAll('[data-ui-language]')) {
-        el.addEventListener('change', () => {
-            language = el.value === 'en' ? 'en' : 'zh-CN';
+        el.addEventListener('click', () => {
+            language = language === 'en' ? 'zh-CN' : 'en';
             save('gemini_ui_language', language);
             refresh();
         });
     }
     for (const el of document.querySelectorAll('[data-ui-theme]')) {
-        el.addEventListener('change', () => {
-            theme = ['light', 'dark'].includes(el.value) ? el.value : 'system';
+        el.addEventListener('click', () => {
+            const modes = ['system', 'light', 'dark'];
+            theme = modes[(modes.indexOf(theme) + 1) % modes.length];
             save('gemini_ui_theme', theme);
             refresh();
             applyTheme();

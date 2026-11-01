@@ -3,11 +3,12 @@ import { assert, assertEquals } from '@std/assert';
 import { startAppServer } from '../helpers/app_server.ts';
 
 async function select(page: Page, id: string, value: string) {
-    await page.evaluate((id, value) => {
-        const el = document.getElementById(id) as HTMLSelectElement;
-        el.value = value;
-        el.dispatchEvent(new Event('change', { bubbles: true }));
-    }, { args: [id, value] });
+    // Exercise the actual one-click controls, not synthetic select changes.
+    for (let attempt = 0; attempt < 3; attempt++) {
+        if (await page.evaluate((id) => document.getElementById(id)!.dataset.state, { args: [id] }) === value) return;
+        await page.evaluate((id) => document.getElementById(id)!.click(), { args: [id] });
+    }
+    assertEquals(await page.evaluate((id) => document.getElementById(id)!.dataset.state, { args: [id] }), value);
 }
 Deno.test({
     name: 'preferences: Chinese default, bilingual controls, persistence and live system theme at 320px',
@@ -41,10 +42,26 @@ Deno.test({
             assertEquals(await page.evaluate(() => document.documentElement.dataset.theme), 'dark');
             assertEquals(await page.evaluate(() => document.getElementById('connect-button')!.textContent), '连接');
             assertEquals(
-                await page.evaluate(() => (document.getElementById('ui-theme') as HTMLSelectElement).value),
+                await page.evaluate(() => document.getElementById('ui-theme')!.dataset.state),
                 'system',
             );
-            await select(page, 'ui-language', 'en');
+            for (const id of ['ui-language', 'ui-theme', 'login-ui-language', 'login-ui-theme']) {
+                assertEquals(
+                    await page.evaluate((id) => document.getElementById(id)!.tagName, { args: [id] }),
+                    'BUTTON',
+                );
+                assert(
+                    await page.evaluate((id) => Boolean(document.getElementById(id)!.getAttribute('aria-label')), {
+                        args: [id],
+                    }),
+                );
+            }
+            await page.evaluate(() => document.getElementById('ui-language')!.click());
+            assertEquals(await page.evaluate(() => document.documentElement.lang), 'en');
+            assertEquals(
+                await page.evaluate(() => document.getElementById('ui-language')!.getAttribute('aria-label')),
+                'Interface language: English',
+            );
             assertEquals(await page.evaluate(() => document.getElementById('connect-button')!.textContent), 'Connect');
             await select(page, 'ui-theme', 'light');
             assertEquals(await page.evaluate(() => document.documentElement.dataset.theme), 'light');
@@ -273,7 +290,7 @@ Deno.test({
             );
             assertEquals(await page.evaluate(() => document.documentElement.lang), 'zh-CN');
             assertEquals(
-                await page.evaluate(() => (document.getElementById('ui-theme') as HTMLSelectElement).value),
+                await page.evaluate(() => document.getElementById('ui-theme')!.dataset.state),
                 'system',
             );
             assertEquals(

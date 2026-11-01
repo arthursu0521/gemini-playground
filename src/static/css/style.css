@@ -344,7 +344,7 @@ input[type='checkbox'] {
 }
 .input-controls {
     display: grid;
-    grid-template-columns: repeat(3, 44px) minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr) auto 44px;
     gap: 8px;
     padding: 16px;
     background: var(--surface-color);
@@ -353,18 +353,26 @@ input[type='checkbox'] {
     border-radius: 0 0 16px 16px;
 }
 #message-input {
-    grid-column: 1 / -1;
+    grid-column: 1;
+    grid-row: 1;
     width: 100%;
     background: #f8f9fb;
 }
 #send-button {
-    grid-column: 4;
-    grid-row: 2;
+    grid-column: 2;
+    grid-row: 1;
     justify-self: end;
 }
-#mic-button,
-#camera-button,
+#mic-button {
+    grid-column: 3;
+    grid-row: 1;
+}
+#camera-button {
+    grid-column: 1;
+    grid-row: 2;
+}
 #screen-button {
+    grid-column: 2;
     grid-row: 2;
 }
 .audio-visualizers {
@@ -617,9 +625,12 @@ body:has(#login-panel:not([hidden])) {
         grid-column: 2;
         grid-row: 1;
     }
-    #mic-button,
-    #camera-button,
+    #camera-button {
+        grid-column: 4;
+        grid-row: 1;
+    }
     #screen-button {
+        grid-column: 5;
         grid-row: 1;
     }
     #config-container.active {
@@ -708,24 +719,42 @@ body:has(#login-panel:not([hidden])) {
 :root[data-theme='dark'] .visualizer {
     background: #3c485d;
 }
+#app,
+#login-panel {
+    position: relative;
+}
 .ui-preferences {
+    position: absolute;
+    top: 0;
+    right: 0;
     display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-    margin-bottom: 16px;
+    gap: 8px;
     min-width: 0;
 }
-.ui-preferences label {
-    display: grid;
-    gap: 5px;
-    flex: 1 1 120px;
-    min-width: 0;
-    color: var(--text-secondary);
+.ui-preferences button {
+    min-width: 44px;
+    min-height: 44px;
+    padding: 0 12px;
     font-size: 12px;
-}
-.ui-preferences select {
-    width: 100%;
+    white-space: nowrap;
 }
 #login-panel .ui-preferences {
-    margin-top: 20px;
+    top: 28px;
+    right: 24px;
+}
+.workspace-header {
+    padding-top: 60px;
+}
+@media (min-width: 640px) {
+    .workspace-header {
+        padding-top: 8px;
+        padding-right: 240px;
+    }
+    .workspace-label {
+        display: none;
+    }
+    #login-panel .ui-preferences {
+        top: 36px;
+        right: 36px;
+    }
 }
