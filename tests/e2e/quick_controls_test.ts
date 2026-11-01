@@ -4,6 +4,17 @@ import { startAppServer } from '../helpers/app_server.ts';
 
 async function checkLanguage(page: Page, prefix: string) {
     for (const language of ['zh-CN', 'en']) {
+        const brand = language === 'en' ? 'CTS AI Pal' : 'CTS好伴';
+        assertEquals(
+            await page.evaluate(() => [
+                document.title,
+                document.querySelector('#login-panel .eyebrow')!.textContent,
+                document.querySelector('.workspace-label')!.textContent,
+                document.querySelector('#app h1')!.textContent,
+            ]),
+            [brand, brand, brand, brand],
+            'login, workspace and browser title use the localized CTS brand',
+        );
         const label = language === 'en' ? 'Interface language: English' : '界面语言: 简体中文';
         assertEquals(
             await page.evaluate((prefix) => {

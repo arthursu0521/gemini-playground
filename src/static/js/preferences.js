@@ -2,7 +2,7 @@ import { createIcon } from './ui/icons.js';
 
 // UI preferences are independent of the model's speech language and credentials.
 const translations = {
-    'Gemini Live Playground': 'Gemini Live 实验室',
+    'CTS AI Pal': 'CTS好伴',
     'Welcome back.': '欢迎回来。',
     'Your space to explore real-time AI. Sign in to start a conversation.': '在这里探索实时 AI。登录后即可开始对话。',
     'Access password': '访问密码',
@@ -10,7 +10,6 @@ const translations = {
     'Sign in': '登录',
     'A private workspace for voice, text, and vision.': '私密的语音、文字与视觉工作空间。',
     'A little more conversation. A world of possibility.': '多一点交流，发现无限可能。',
-    'Live playground': '实时实验室',
     'Gemini API key': 'Gemini API 密钥',
     'or access password': '或输入访问密码',
     'Keep the key in this browser after the tab is closed': '关闭标签页后仍在此浏览器中保存密钥',

@@ -35,7 +35,7 @@ Deno.test({
             await page.goto(app.origin);
             await page.waitForFunction(() => Boolean((globalThis as Record<string, unknown>).geminiPlayground));
             await t.step('workspace and login provide clear headings and form descriptions', async () => {
-                assertEquals(await page.evaluate(() => document.querySelector('#app h1')?.textContent), 'Gemini Live');
+                assertEquals(await page.evaluate(() => document.querySelector('#app h1')?.textContent), 'CTS好伴');
                 assertEquals(
                     await page.evaluate(() =>
                         document.getElementById('login-password')?.getAttribute('aria-describedby')
