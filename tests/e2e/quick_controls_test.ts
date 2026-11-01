@@ -99,7 +99,7 @@ Deno.test({
         const browser = await launch({ path: Deno.env.get('CHROME_PATH'), args: ['--no-sandbox'] });
         const page = await browser.newPage();
         try {
-            for (const width of [320, 375, 1280]) {
+            for (const width of [320, 375, 390, 639, 640, 768, 1280]) {
                 await page.unsafelyGetCelestialBindings().Emulation.setDeviceMetricsOverride({
                     width,
                     height: 1000,
@@ -131,6 +131,31 @@ Deno.test({
                     true,
                     'input, Send and microphone share a row in that visual order',
                 );
+                if (width < 640) {
+                    for (const language of ['zh-CN', 'en']) {
+                        assertEquals(
+                            await page.evaluate(() => {
+                                const [send, mic, camera, screen] = [
+                                    'send-button',
+                                    'mic-button',
+                                    'camera-button',
+                                    'screen-button',
+                                ].map((id) => document.getElementById(id)!.getBoundingClientRect());
+                                const near = (a: number, b: number) => Math.abs(a - b) < 1;
+                                return near(send.left, camera.left) && near(mic.left, screen.left) &&
+                                    near(camera.top, screen.top) && near(send.top, mic.top) &&
+                                    camera.top >= send.bottom && camera.right <= screen.left &&
+                                    [send, mic, camera, screen].every((r) =>
+                                        r.width >= 44 && r.height >= 44 && near(r.width, r.height)
+                                    ) && near(screen.right - camera.left, screen.bottom - mic.top) &&
+                                    document.documentElement.scrollWidth <= innerWidth;
+                            }),
+                            true,
+                            `${width}px ${language}: Send/mic above camera/screen form a square`,
+                        );
+                        await page.evaluate(() => document.getElementById('ui-language')!.click());
+                    }
+                }
                 for (const state of ['light', 'dark', 'system']) {
                     await page.evaluate(() => document.getElementById('ui-theme')!.click());
                     assertEquals(await page.evaluate(() => document.getElementById('ui-theme')!.dataset.state), state);

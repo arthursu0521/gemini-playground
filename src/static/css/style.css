@@ -428,7 +428,10 @@ input[type='checkbox'] {
     display: grid;
     gap: 20px;
     background: var(--surface-color);
-    border-radius: 22px 22px 0 0;
+    border-radius: 22px;
+    clip-path: inset(0 round 22px);
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-color) var(--surface-color);
     padding: 24px 20px max(24px, env(safe-area-inset-bottom));
     box-shadow: 0 20px 60px #18263d26;
 }
@@ -499,11 +502,26 @@ body:has(#config-container.active) {
 body:has(#login-panel:not([hidden])) {
     display: flex;
 }
-#login-panel .brand-mark {
+.login-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding-top: 60px;
     margin-bottom: 24px;
 }
+.login-brand .brand-mark {
+    flex-shrink: 0;
+}
 #login-panel .eyebrow {
-    margin-bottom: 10px;
+    margin: 0;
+    font-size: 26px;
+    line-height: 1.2;
+    letter-spacing: -0.6px;
+    text-transform: none;
+}
+.workspace-header h1,
+.workspace-label {
+    color: var(--primary-color);
 }
 #login-panel h1 {
     font-size: 28px;
@@ -592,6 +610,26 @@ body:has(#login-panel:not([hidden])) {
     right: 12px;
     top: 12px;
     background: #202937;
+}
+@media (max-width: 639px) {
+    .input-controls {
+        grid-template-columns: minmax(0, 1fr) repeat(2, 44px);
+    }
+    #message-input {
+        height: 44px;
+        padding-block: 8px;
+    }
+    #send-button {
+        width: 44px;
+        height: 44px;
+        padding: 4px;
+    }
+    #camera-button {
+        grid-column: 2;
+    }
+    #screen-button {
+        grid-column: 3;
+    }
 }
 @media (min-width: 640px) {
     body {

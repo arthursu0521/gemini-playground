@@ -112,6 +112,21 @@ Deno.test({
                         }),
                         'Settings fit without horizontal scrolling',
                     );
+                    assert(
+                        await page.evaluate(() => {
+                            const panel = document.querySelector('.config-wrapper')!;
+                            const style = getComputedStyle(panel);
+                            return [
+                                'borderTopLeftRadius',
+                                'borderTopRightRadius',
+                                'borderBottomLeftRadius',
+                                'borderBottomRightRadius',
+                            ].every((key) => parseFloat(style[key as keyof CSSStyleDeclaration] as string) >= 20) &&
+                                style.clipPath === 'inset(0px round 22px)' &&
+                                panel.scrollHeight > panel.clientHeight;
+                        }),
+                        'settings retain four rounded corners and clip the native scrollbar while remaining scrollable',
+                    );
                     await page.evaluate(() => document.getElementById('apply-config')!.scrollIntoView());
                     assert(
                         await page.evaluate(() => {
@@ -164,6 +179,23 @@ Deno.test({
                             return r.left >= 0 && r.right <= innerWidth && r.top >= 0 && r.bottom <= innerHeight;
                         }),
                         'Login card fits the viewport',
+                    );
+                    assert(
+                        await page.evaluate(() => {
+                            const mark = document.querySelector('#login-panel .brand-mark')!;
+                            const brand = document.querySelector('#login-panel .eyebrow')!;
+                            const m = mark.getBoundingClientRect();
+                            const b = brand.getBoundingClientRect();
+                            const color = getComputedStyle(mark).color;
+                            const controls = document.querySelector('#login-panel .ui-preferences')!
+                                .getBoundingClientRect();
+                            return m.top >= controls.bottom + 8 &&
+                                Math.abs((m.top + m.bottom) / 2 - (b.top + b.bottom) / 2) < 1 &&
+                                b.left >= m.right && parseFloat(getComputedStyle(brand).fontSize) >= 24 &&
+                                [brand, document.querySelector('#app h1')!, document.querySelector('.workspace-label')!]
+                                    .every((el) => getComputedStyle(el).color === color);
+                        }),
+                        'login brand is title-sized beside the icon; all brand text matches its blue',
                     );
                     await screenshot(page, `login-${width}`);
                     await page.evaluate(() => {
