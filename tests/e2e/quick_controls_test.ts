@@ -2,6 +2,63 @@ import { launch, type Page } from '@astral/astral';
 import { assert, assertEquals } from '@std/assert';
 import { startAppServer } from '../helpers/app_server.ts';
 
+async function checkLanguage(page: Page, prefix: string) {
+    for (const language of ['zh-CN', 'en']) {
+        const label = language === 'en' ? 'Interface language: English' : '界面语言: 简体中文';
+        assertEquals(
+            await page.evaluate((prefix) => {
+                const button = document.getElementById(`${prefix}ui-language`)!;
+                return [button.textContent, button.getAttribute('aria-label'), button.getAttribute('title')];
+            }, { args: [prefix] }),
+            [language === 'en' ? 'EN' : '中', label, label],
+        );
+        await page.evaluate((prefix) => document.getElementById(`${prefix}ui-language`)!.click(), {
+            args: [prefix],
+        });
+    }
+}
+
+async function checkTheme(page: Page, prefix: string) {
+    for (const language of ['zh-CN', 'en']) {
+        for (const [index, state] of ['system', 'light', 'dark', 'system'].entries()) {
+            if (index > 0) {
+                await page.evaluate((prefix) => document.getElementById(`${prefix}ui-theme`)!.click(), {
+                    args: [prefix],
+                });
+            }
+            const stateName = language === 'en'
+                ? ({ system: 'Follow system', light: 'Light', dark: 'Dark' })[state]
+                : ({ system: '跟随系统', light: '浅色', dark: '深色' })[state];
+            const label = `${language === 'en' ? 'Appearance' : '外观'}: ${stateName}`;
+            const result = await page.evaluate((prefix) => {
+                const button = document.getElementById(`${prefix}ui-theme`)!;
+                const svg = button.querySelector('svg');
+                return {
+                    state: button.dataset.state,
+                    text: button.textContent,
+                    label: button.getAttribute('aria-label'),
+                    title: button.getAttribute('title'),
+                    hidden: svg?.getAttribute('aria-hidden'),
+                    shape: svg?.firstElementChild?.tagName,
+                    count: button.querySelectorAll('svg').length,
+                };
+            }, { args: [prefix] });
+            assertEquals(result, {
+                state,
+                text: '',
+                label,
+                title: label,
+                hidden: 'true',
+                shape: ({ system: 'rect', light: 'circle', dark: 'path' })[state],
+                count: 1,
+            });
+        }
+        await page.evaluate((prefix) => document.getElementById(`${prefix}ui-language`)!.click(), {
+            args: [prefix],
+        });
+    }
+}
+
 async function checkCorner(page: Page, prefix: string) {
     const result = await page.evaluate((prefix) => {
         const language = document.getElementById(`${prefix}ui-language`)!;
@@ -41,11 +98,15 @@ Deno.test({
                 await page.goto(app.origin);
                 await page.waitForFunction(() => document.getElementById('login-panel')!.hidden === false);
                 await checkCorner(page, 'login-');
+                await checkLanguage(page, 'login-');
+                await checkTheme(page, 'login-');
                 await Deno.writeFile(`/tmp/gemini-quick-controls-login-${width}.png`, await page.screenshot());
                 // Login/session security is covered by the existing HTTPS auth suite.
                 await page.goto(workspace.origin);
                 await page.waitForFunction(() => document.getElementById('app')!.hidden === false);
                 await checkCorner(page, '');
+                await checkLanguage(page, '');
+                await checkTheme(page, '');
                 assertEquals(
                     await page.evaluate(() => {
                         const boxes = ['message-input', 'send-button', 'mic-button'].map((id) =>

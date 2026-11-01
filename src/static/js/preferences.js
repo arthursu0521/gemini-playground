@@ -1,3 +1,5 @@
+import { createIcon } from './ui/icons.js';
+
 // UI preferences are independent of the model's speech language and credentials.
 const translations = {
     'Gemini Live Playground': 'Gemini Live 实验室',
@@ -236,15 +238,15 @@ function refresh() {
     }
     for (const el of document.querySelectorAll('[data-ui-language]')) {
         el.dataset.state = language;
-        el.textContent = language === 'en' ? 'English' : '简体中文';
-        const label = `${t('Interface language')}: ${el.textContent}`;
+        el.textContent = language === 'en' ? 'EN' : '中';
+        const label = `${t('Interface language')}: ${language === 'en' ? 'English' : '简体中文'}`;
         el.setAttribute('aria-label', label);
         el.title = label;
     }
     for (const el of document.querySelectorAll('[data-ui-theme]')) {
         el.dataset.state = theme;
-        el.textContent = t({ system: 'Follow system', light: 'Light', dark: 'Dark' }[theme]);
-        const label = `${t('Appearance')}: ${el.textContent}`;
+        el.replaceChildren(createIcon({ system: 'monitor', light: 'sun', dark: 'moon' }[theme]));
+        const label = `${t('Appearance')}: ${t({ system: 'Follow system', light: 'Light', dark: 'Dark' }[theme])}`;
         el.setAttribute('aria-label', label);
         el.title = label;
     }
