@@ -1,3 +1,4 @@
+import { text as localizedText } from '../preferences.js';
 // @ts-check
 /**
  * @fileoverview Conversation / log panel. Keeps at most `maxEntries` DOM nodes, streams partial
@@ -27,7 +28,7 @@ export class LogView {
      * @param {string} text
      * @returns {HTMLElement}
      */
-    add(type, text) {
+    add(type, text, { raw = false } = {}) {
         const entry = document.createElement('div');
         entry.className = `log-entry ${type}`;
         entry.setAttribute('role', type === 'error' ? 'alert' : 'listitem');
@@ -38,11 +39,12 @@ export class LogView {
 
         const label = document.createElement('span');
         label.className = 'label';
-        label.textContent = LABELS[type];
+        localizedText(label, LABELS[type]);
 
         const body = document.createElement('span');
         body.className = 'text';
-        body.textContent = text;
+        if (raw || type === 'user' || type === 'ai') body.textContent = text;
+        else localizedText(body, text);
 
         entry.append(time, label, body);
         const stick = this.#isScrolledToBottom();

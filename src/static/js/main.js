@@ -2,10 +2,12 @@
 /**
  * @fileoverview Entry point: starts the app once the DOM is ready.
  */
+import { initPreferences, t, text } from './preferences.js';
 import { App } from './app.js';
 import { ensureSession } from './session-ui.js';
 
 async function boot() {
+    initPreferences();
     const login = /** @type {HTMLElement} */ (document.getElementById('login-panel'));
     const main = /** @type {HTMLElement} */ (document.getElementById('app'));
     const logout = /** @type {HTMLButtonElement} */ (document.getElementById('logout-button'));
@@ -34,6 +36,7 @@ async function boot() {
         event.preventDefault();
         const button = /** @type {HTMLButtonElement} */ (form.querySelector('button'));
         button.disabled = true;
+        delete error.dataset.i18n;
         error.textContent = '';
         try {
             const response = await fetch('/auth/login', {
@@ -43,13 +46,28 @@ async function boot() {
                 body: JSON.stringify({ password: input.value }),
             });
             if (!response.ok) {
-                throw new Error(response.status === 429 ? 'Too many attempts. Wait a minute.' : 'Sign-in failed');
+                throw new Error(
+                    response.status === 401
+                        ? 'Wrong password. Please try again.'
+                        : response.status === 429
+                        ? 'Too many attempts. Wait a minute.'
+                        : response.status >= 500
+                        ? 'Service unavailable. Please try again later.'
+                        : 'Sign-in failed. Please try again.',
+                );
             }
             input.value = '';
             login.hidden = true;
             main.hidden = false;
         } catch (e) {
-            error.textContent = e instanceof Error ? e.message : 'Sign-in failed';
+            text(
+                error,
+                e instanceof TypeError
+                    ? 'Service unavailable. Please try again later.'
+                    : e instanceof Error
+                    ? e.message
+                    : 'Sign-in failed. Please try again.',
+            );
         } finally {
             button.disabled = false;
         }
@@ -66,7 +84,7 @@ async function boot() {
         if (response?.ok) {
             input.value = '';
             showLogin();
-        } else alert('Sign-out could not be confirmed. Please retry.');
+        } else alert(t('Sign-out could not be confirmed. Please retry.'));
     });
     app.start();
     // Exposed for debugging in the browser console and for end-to-end tests.

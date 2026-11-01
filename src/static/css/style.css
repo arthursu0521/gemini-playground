@@ -75,17 +75,17 @@ input:disabled {
 }
 button.secondary,
 #logout-button {
-    background: white;
+    background: var(--surface-color);
     color: var(--text-secondary);
     border-color: var(--border-color);
 }
 button.secondary:hover,
 #logout-button:hover {
-    background: #f0f3f8;
+    background: var(--muted-surface, #f0f3f8);
     color: var(--text-color);
 }
 :focus-visible {
-    outline: 3px solid #245cda;
+    outline: 3px solid var(--focus-color, #245cda);
     outline-offset: 3px;
 }
 input:not([type='checkbox']),
@@ -97,13 +97,13 @@ textarea {
     padding: 11px 12px;
     border: 1px solid var(--border-color);
     border-radius: 10px;
-    background: white;
+    background: var(--surface-color);
     color: var(--text-color);
     font-size: 16px;
 }
 input::placeholder,
 textarea::placeholder {
-    color: #667389;
+    color: var(--text-secondary);
 }
 input[type='checkbox'] {
     accent-color: var(--primary-color);
@@ -193,7 +193,7 @@ input[type='checkbox'] {
     align-items: center;
     padding: 16px;
     border: 1px solid var(--border-color);
-    background: white;
+    background: var(--surface-color);
     border-radius: 16px 16px 0 0;
 }
 #api-key,
@@ -211,7 +211,7 @@ input[type='checkbox'] {
 }
 #config-toggle {
     margin-left: auto;
-    background: #f0f3f8;
+    background: var(--muted-surface, #f0f3f8);
     color: var(--text-color);
 }
 .toolbar {
@@ -220,7 +220,7 @@ input[type='checkbox'] {
     gap: 8px;
     align-items: center;
     padding: 12px 16px;
-    background: white;
+    background: var(--surface-color);
     border: 1px solid var(--border-color);
     border-top: 0;
 }
@@ -256,7 +256,7 @@ input[type='checkbox'] {
     justify-content: space-between;
     gap: 12px;
     padding: 18px 18px 0;
-    background: white;
+    background: var(--surface-color);
     border-inline: 1px solid var(--border-color);
 }
 .conversation-heading h2 {
@@ -274,7 +274,7 @@ input[type='checkbox'] {
     overflow-wrap: anywhere;
     overscroll-behavior: contain;
     padding: 18px;
-    background: white;
+    background: var(--surface-color);
     border-inline: 1px solid var(--border-color);
 }
 #logs-container:empty {
@@ -285,13 +285,13 @@ input[type='checkbox'] {
     gap: 8px;
 }
 #logs-container:empty::before {
-    content: 'A conversation starts here';
+    content: attr(data-empty-title);
     font-size: 20px;
     font-weight: 600;
     letter-spacing: -0.5px;
 }
 #logs-container:empty::after {
-    content: 'Connect, then speak, type, or share your view.';
+    content: attr(data-empty-hint);
     color: var(--text-secondary);
     font-size: 13px;
     max-width: 230px;
@@ -347,7 +347,7 @@ input[type='checkbox'] {
     grid-template-columns: repeat(3, 44px) minmax(0, 1fr);
     gap: 8px;
     padding: 16px;
-    background: white;
+    background: var(--surface-color);
     border: 1px solid var(--border-color);
     border-top: 0;
     border-radius: 0 0 16px 16px;
@@ -419,7 +419,7 @@ input[type='checkbox'] {
     overscroll-behavior: contain;
     display: grid;
     gap: 20px;
-    background: white;
+    background: var(--surface-color);
     border-radius: 22px 22px 0 0;
     padding: 24px 20px max(24px, env(safe-area-inset-bottom));
     box-shadow: 0 20px 60px #18263d26;
@@ -434,7 +434,7 @@ input[type='checkbox'] {
     margin-top: 5px;
 }
 #close-config {
-    background: #f0f3f8;
+    background: var(--muted-surface, #f0f3f8);
     color: var(--text-color);
 }
 .setting-container {
@@ -482,7 +482,7 @@ body:has(#config-container.active) {
 #login-panel {
     width: min(100%, 420px);
     margin: auto;
-    background: white;
+    background: var(--surface-color);
     padding: 28px 24px;
     border: 1px solid var(--border-color);
     border-radius: 24px;
@@ -658,4 +658,74 @@ body:has(#login-panel:not([hidden])) {
         animation: none !important;
         scroll-behavior: auto !important;
     }
+}
+
+/* Luminance-layered dark surfaces, with locally installed system fonts only. */
+:root[data-theme='dark'] {
+    color-scheme: dark;
+    --background-color: #101318;
+    --surface-color: #1b2029;
+    --muted-surface: #293241;
+    --border-color: #526078;
+    --text-color: #f2f5fa;
+    --text-secondary: #b8c4d8;
+    --primary-color: #315fcb;
+    --primary-hover: #3f6dd8;
+    --focus-color: #9dbbff;
+    --secondary-color: #5bd1ae;
+    --danger-color: #b93243;
+}
+:root[data-theme='dark'] .brand-mark,
+:root[data-theme='dark'] .icon-button.round {
+    background: #293b5b;
+    color: #b9d1ff;
+}
+:root[data-theme='dark'] .eyebrow {
+    color: #a6c3ff;
+}
+:root[data-theme='dark'] #message-input,
+:root[data-theme='dark'] .log-entry {
+    background: #242d3a;
+}
+:root[data-theme='dark'] .log-entry.user {
+    background: #243a5c;
+    color: #d5e4ff;
+}
+:root[data-theme='dark'] .log-entry.ai {
+    background: #283141;
+}
+:root[data-theme='dark'] .log-entry.system {
+    background: #1b3c34;
+    color: #a0ebcf;
+}
+:root[data-theme='dark'] .log-entry.error {
+    background: #4a2530;
+    color: #ffb6bf;
+}
+:root[data-theme='dark'] #login-error {
+    color: #ffb6bf;
+}
+:root[data-theme='dark'] .visualizer {
+    background: #3c485d;
+}
+.ui-preferences {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 16px;
+    min-width: 0;
+}
+.ui-preferences label {
+    display: grid;
+    gap: 5px;
+    flex: 1 1 120px;
+    min-width: 0;
+    color: var(--text-secondary);
+    font-size: 12px;
+}
+.ui-preferences select {
+    width: 100%;
+}
+#login-panel .ui-preferences {
+    margin-top: 20px;
 }

@@ -127,6 +127,10 @@ async function openPage(origin: string, chromePath: string | undefined) {
     });
     page.addEventListener('pageerror', (e) => consoleErrors.push(String(e.detail)));
     await page.unsafelyGetCelestialBindings().Page.addScriptToEvaluateOnNewDocument({ source: INIT_SCRIPT });
+    // Existing English assertions deliberately exercise the supported English preference.
+    await page.unsafelyGetCelestialBindings().Page.addScriptToEvaluateOnNewDocument({
+        source: "localStorage.setItem('gemini_ui_language', 'en')",
+    });
     await page.goto(origin, { waitUntil: 'load' });
     await page.waitForFunction(() => Boolean((globalThis as Record<string, unknown>).geminiPlayground));
     return { browser, page, consoleErrors };

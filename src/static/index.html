@@ -2,12 +2,12 @@
 UI based on: https://github.com/ViaAnthroposBenevolentia/gemini-2-live-api-demo (MIT License, ChrisKyle)
 -->
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
         <meta name="referrer" content="no-referrer">
-        <title>Gemini Live Playground</title>
+        <title data-i18n="Gemini Live Playground">Gemini Live Playground</title>
         <link rel="icon" href="favicon.ico">
         <link rel="stylesheet" href="css/style.css">
         <script type="module" src="js/main.js"></script>
@@ -15,38 +15,58 @@ UI based on: https://github.com/ViaAnthroposBenevolentia/gemini-2-live-api-demo 
     <body>
         <section id="login-panel" hidden>
             <div class="brand-mark" aria-hidden="true">✦</div>
-            <p class="eyebrow">Gemini Live Playground</p>
-            <h1>Welcome back.</h1>
+            <p class="eyebrow" data-i18n="Gemini Live Playground">Gemini Live Playground</p>
+            <h1 data-i18n="Welcome back.">Welcome back.</h1>
             <p id="login-description"
-                class="subtitle">Your space to explore real-time AI. Sign in to start a conversation.</p>
+                class="subtitle"
+                data-i18n="Your space to explore real-time AI. Sign in to start a conversation.">Your space to explore real-time AI. Sign in to start a conversation.</p>
+            <div class="ui-preferences">
+                <label
+                    for="login-ui-language"><span data-i18n="Interface language">界面语言</span><select id="login-ui-language" data-ui-language><option value="zh-CN">简体中文</option><option value="en">English</option></select></label>
+                <label
+                    for="login-ui-theme"><span data-i18n="Appearance">外观</span><select id="login-ui-theme" data-ui-theme><option value="system" data-i18n="Follow system">跟随系统</option><option value="light" data-i18n="Light">浅色</option><option value="dark" data-i18n="Dark">深色</option></select></label>
+            </div>
             <form id="login-form">
-                <label for="login-password">Access password</label>
+                <label for="login-password" data-i18n="Access password">Access password</label>
                 <input id="login-password" type="password" autocomplete="current-password"
-                    aria-describedby="login-description login-error" placeholder="Enter your access password" required>
-                <button type="submit">Sign in</button>
+                    aria-describedby="login-description login-error" placeholder="Enter your access password"
+                    data-i18n-placeholder="Enter your access password" required>
+                <button type="submit" data-i18n="Sign in">Sign in</button>
                 <p id="login-error" role="alert"></p>
             </form>
-            <p class="login-footer">A private workspace for voice, text, and vision.</p>
+            <p class="login-footer"
+                data-i18n="A private workspace for voice, text, and vision.">A private workspace for voice, text, and vision.</p>
         </section>
         <main id="app">
             <header class="workspace-header">
                 <div class="brand-mark" aria-hidden="true">✦</div>
                 <div>
-                    <h1>Gemini Live</h1>
-                    <p class="subtitle">A little more conversation. A world of possibility.</p>
+                    <h1 data-i18n="Gemini Live">Gemini Live</h1>
+                    <p class="subtitle"
+                        data-i18n="A little more conversation. A world of possibility.">A little more conversation. A world of possibility.</p>
                 </div>
-                <span class="workspace-label">Live playground</span>
+                <span class="workspace-label" data-i18n="Live playground">Live playground</span>
             </header>
+            <div class="ui-preferences">
+                <label
+                    for="ui-language"><span data-i18n="Interface language">界面语言</span><select id="ui-language" data-ui-language><option value="zh-CN">简体中文</option><option value="en">English</option></select></label>
+                <label
+                    for="ui-theme"><span data-i18n="Appearance">外观</span><select id="ui-theme" data-ui-theme><option value="system" data-i18n="Follow system">跟随系统</option><option value="light" data-i18n="Light">浅色</option><option value="dark" data-i18n="Dark">深色</option></select></label>
+            </div>
             <form id="auth-form" class="settings" autocomplete="off">
-                <label class="visually-hidden" for="api-key">Gemini API key</label>
-                <input type="password" id="api-key" placeholder="Gemini API key" spellcheck="false" autocomplete="off">
-                <label class="visually-hidden" for="access-password">Access password</label>
-                <input type="password" id="access-password" placeholder="or access password" hidden
+                <label class="visually-hidden" for="api-key" data-i18n="Gemini API key">Gemini API key</label>
+                <input type="password" id="api-key" placeholder="Gemini API key" data-i18n-placeholder="Gemini API key"
+                    spellcheck="false" autocomplete="off">
+                <label class="visually-hidden" for="access-password" data-i18n="Access password">Access password</label>
+                <input type="password" id="access-password" placeholder="or access password"
+                    data-i18n-placeholder="or access password" hidden
                     autocomplete="current-password">
-                <label class="checkbox" title="Keep the key in this browser after the tab is closed">
-                <input type="checkbox" id="remember-key"> Remember key
+                <label class="checkbox" title="Keep the key in this browser after the tab is closed"
+                    data-i18n-title="Keep the key in this browser after the tab is closed">
+                <input type="checkbox" id="remember-key"> <span data-i18n="Remember key">Remember key</span>
             </label>
                 <button type="button" id="config-toggle" class="icon-button" data-icon="sliders" aria-label="Settings"
+                    data-i18n-aria-label="Settings"
                     aria-expanded="false" aria-controls="config-container"></button>
             </form>
 
@@ -54,87 +74,102 @@ UI based on: https://github.com/ViaAnthroposBenevolentia/gemini-2-live-api-demo 
                 <div class="config-wrapper">
                     <div class="config-heading">
                         <div>
-                            <h2 id="config-title">Session settings</h2>
-                            <p class="hint">Make this conversation your own.</p>
+                            <h2 id="config-title" data-i18n="Session settings">Session settings</h2>
+                            <p class="hint"
+                                data-i18n="Make this conversation your own.">Make this conversation your own.</p>
                         </div>
                         <button type="button" id="close-config" class="icon-button" data-icon="x"
-                            aria-label="Close settings"></button>
+                            aria-label="Close settings" data-i18n-aria-label="Close settings"></button>
                     </div>
                     <div class="setting-container">
-                        <label class="setting-label" for="model-input">Model</label>
+                        <label class="setting-label" for="model-input" data-i18n="Model">Model</label>
                         <input id="model-input" list="model-list" spellcheck="false">
                         <datalist id="model-list"></datalist>
                     </div>
                     <div class="setting-container">
-                        <label class="setting-label" for="voice-select">Voice</label>
+                        <label class="setting-label" for="voice-select" data-i18n="Voice">Voice</label>
                         <select id="voice-select"></select>
                     </div>
                     <div class="setting-container">
-                        <label class="setting-label" for="language-select">Language</label>
+                        <label class="setting-label" for="language-select" data-i18n="Language">Language</label>
                         <select id="language-select"></select>
                     </div>
                     <div class="setting-container">
-                        <label class="setting-label" for="response-type-select">Response</label>
+                        <label class="setting-label" for="response-type-select" data-i18n="Response">Response</label>
                         <select id="response-type-select">
-                            <option value="audio">Voice + transcript</option>
-                            <option value="text">Text only (voice muted)</option>
+                            <option value="audio" data-i18n="Voice + transcript">Voice + transcript</option>
+                            <option value="text" data-i18n="Text only (voice muted)">Text only (voice muted)</option>
                         </select>
                     </div>
                     <div class="setting-container">
-                        <label class="setting-label" for="fps-input">Video FPS</label>
+                        <label class="setting-label" for="fps-input" data-i18n="Video FPS">Video FPS</label>
                         <input type="number" id="fps-input" min="1" max="5" step="1">
-                        <span class="hint">Gemini looks at about one frame per second; more only costs bandwidth.</span>
+                        <span class="hint"
+                            data-i18n="Gemini looks at about one frame per second; more only costs bandwidth.">Gemini looks at about one frame per second; more only costs bandwidth.</span>
                     </div>
-                    <label class="setting-label" for="system-instruction">System instruction</label>
+                    <label class="setting-label" for="system-instruction"
+                        data-i18n="System instruction">System instruction</label>
                     <textarea id="system-instruction" rows="5"
-                        placeholder="Enter custom system instructions..."></textarea>
+                        placeholder="Enter custom system instructions..."
+                        data-i18n-placeholder="Enter custom system instructions..."></textarea>
                     <div class="setting-container">
                         <label
-                            class="checkbox"><input type="checkbox" id="debug-toggle"> Show protocol details in the log</label>
+                            class="checkbox"><input type="checkbox" id="debug-toggle"> <span data-i18n="Show protocol details in the log">Show protocol details in the log</span></label>
                     </div>
                     <div
-                        class="tools-note"><strong>Connected tools</strong><p class="hint">Google Search grounds answers on the web. The weather tool returns clearly labeled demo data. Tool activity appears in your conversation.</p></div>
+                        class="tools-note"><strong data-i18n="Connected tools">Connected tools</strong><p class="hint" data-i18n="Google Search grounds answers on the web. The weather tool returns clearly labeled demo data. Tool activity appears in your conversation.">Google Search grounds answers on the web. The weather tool returns clearly labeled demo data. Tool activity appears in your conversation.</p></div>
                     <div class="config-actions">
-                        <button type="button" id="forget-key" class="secondary">Forget saved key</button>
-                        <button type="button" id="export-logs" class="secondary">Export logs</button>
-                        <button type="button" id="apply-config">Done</button>
+                        <button type="button" id="forget-key" class="secondary"
+                            data-i18n="Forget saved key">Forget saved key</button>
+                        <button type="button" id="export-logs" class="secondary"
+                            data-i18n="Export logs">Export logs</button>
+                        <button type="button" id="apply-config" data-i18n="Done">Done</button>
                     </div>
-                    <p class="hint">Settings apply to the next connection.</p>
+                    <p class="hint"
+                        data-i18n="Settings apply to the next connection.">Settings apply to the next connection.</p>
                 </div>
             </section>
 
             <div class="toolbar">
-                <button type="button" id="logout-button" hidden>Sign out</button>
-                <button type="button" id="connect-button">Connect</button>
-                <span id="status" class="status" role="status" aria-live="polite">Disconnected</span>
+                <button type="button" id="logout-button" hidden data-i18n="Sign out">Sign out</button>
+                <button type="button" id="connect-button" data-i18n="Connect">Connect</button>
+                <span id="status" class="status" role="status" aria-live="polite"
+                    data-i18n="Disconnected">Disconnected</span>
                 <button type="button" id="clear-logs" class="secondary small"
-                    aria-label="Clear conversation">Clear</button>
+                    aria-label="Clear conversation" data-i18n-aria-label="Clear conversation"
+                    data-i18n="Clear">Clear</button>
             </div>
 
-            <div class="conversation-heading"><h2>Conversation</h2><span>Voice · Text · Vision</span></div>
-            <div id="logs-container" role="log" aria-live="polite" aria-label="Conversation" tabindex="0"></div>
+            <div
+                class="conversation-heading"><h2 data-i18n="Conversation">Conversation</h2><span data-i18n="Voice · Text · Vision">Voice · Text · Vision</span></div>
+            <div id="logs-container" role="log" aria-live="polite" aria-label="Conversation"
+                data-i18n-aria-label="Conversation" tabindex="0"></div>
 
             <form id="message-form" class="input-controls">
-                <label class="visually-hidden" for="message-input">Message</label>
-                <input type="text" id="message-input" placeholder="Type a message..." autocomplete="off" disabled>
-                <button type="submit" id="send-button" disabled>Send</button>
+                <label class="visually-hidden" for="message-input" data-i18n="Message">Message</label>
+                <input type="text" id="message-input" placeholder="Type a message..."
+                    data-i18n-placeholder="Type a message..." autocomplete="off" disabled>
+                <button type="submit" id="send-button" disabled data-i18n="Send">Send</button>
                 <button type="button" id="mic-button" class="icon-button round" data-icon="mic"
-                    aria-label="Start microphone" aria-pressed="false" disabled></button>
+                    aria-label="Start microphone" data-i18n-aria-label="Start microphone" aria-pressed="false"
+                    disabled></button>
                 <button type="button" id="camera-button" class="icon-button round" data-icon="video"
-                    aria-label="Start camera" aria-pressed="false" disabled></button>
+                    aria-label="Start camera" data-i18n-aria-label="Start camera" aria-pressed="false"
+                    disabled></button>
                 <button type="button" id="screen-button" class="icon-button round" data-icon="monitor"
-                    aria-label="Share screen" aria-pressed="false" disabled></button>
+                    aria-label="Share screen" data-i18n-aria-label="Share screen" aria-pressed="false"
+                    disabled></button>
             </form>
 
             <div class="audio-visualizers">
                 <div class="visualizer-container">
-                    <span class="visualizer-label">Input audio</span>
+                    <span class="visualizer-label" data-i18n="Input audio">Input audio</span>
                     <div id="input-audio-visualizer" class="visualizer">
                         <div class="audio-bar"></div>
                     </div>
                 </div>
                 <div class="visualizer-container">
-                    <span class="visualizer-label">Output audio</span>
+                    <span class="visualizer-label" data-i18n="Output audio">Output audio</span>
                     <div id="audio-visualizer" class="visualizer">
                         <div class="audio-bar"></div>
                     </div>
@@ -144,18 +179,19 @@ UI based on: https://github.com/ViaAnthroposBenevolentia/gemini-2-live-api-demo 
             <div id="video-container" hidden>
                 <video id="preview" playsinline autoplay muted></video>
                 <canvas id="frame-preview" width="160" height="120"
-                    title="Frame sent to Gemini (click to enlarge)"></canvas>
+                    title="Frame sent to Gemini (click to enlarge)"
+                    data-i18n-title="Frame sent to Gemini (click to enlarge)"></canvas>
                 <div class="video-controls">
                     <button type="button" id="flip-camera" class="icon-button" data-icon="refresh"
-                        aria-label="Switch camera"></button>
-                    <button type="button" id="stop-video">Stop video</button>
+                        aria-label="Switch camera" data-i18n-aria-label="Switch camera"></button>
+                    <button type="button" id="stop-video" data-i18n="Stop video">Stop video</button>
                 </div>
             </div>
 
             <div id="screen-container" hidden>
                 <video id="screen-preview" playsinline autoplay muted></video>
                 <button type="button" id="stop-screen" class="close-button icon-button" data-icon="x"
-                    aria-label="Stop sharing"></button>
+                    aria-label="Stop sharing" data-i18n-aria-label="Stop sharing"></button>
             </div>
         </main>
     </body>

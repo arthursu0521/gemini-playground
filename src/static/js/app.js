@@ -1,3 +1,4 @@
+import { attribute, t, text } from './preferences.js';
 // @ts-check
 /**
  * @fileoverview Application controller: wires the UI to the Live client, audio, video and tools.
@@ -140,11 +141,26 @@ export class App {
             const option = document.createElement('option');
             option.value = model.id;
             option.label = model.label;
+            option.dataset.i18nLabel = model.label;
+            option.label = t(model.label);
             el.modelList.append(option);
         }
-        for (const voice of VOICES) el.voice.add(new Option(`${voice.name} (${voice.style})`, voice.name));
-        el.language.add(new Option('Auto-detect', 'auto'));
-        for (const lang of languages) el.language.add(new Option(lang.name, lang.code));
+        for (const voice of VOICES) {
+            const option = new Option('', voice.name);
+            option.dataset.voiceName = voice.name;
+            option.dataset.voiceStyle = voice.style;
+            option.textContent = `${voice.name} (${t(voice.style === 'Clear' ? 'voice.Clear' : voice.style)})`;
+            el.voice.add(option);
+        }
+        const auto = new Option(t('Auto-detect'), 'auto');
+        auto.dataset.i18n = 'Auto-detect';
+        el.language.add(auto);
+        for (const lang of languages) {
+            const option = new Option(lang.name, lang.code);
+            option.dataset.languageCode = lang.code;
+            el.language.add(option);
+        }
+        globalThis.dispatchEvent(new Event('ui-options-ready'));
 
         el.apiKey.value = settings.apiKey;
         el.accessPassword.value = settings.accessPassword;
@@ -189,7 +205,7 @@ export class App {
             const config = await res.json();
             if (config.serverKeyAvailable) {
                 this.el.accessPassword.hidden = true;
-                this.el.apiKey.placeholder = 'Gemini API key (optional)';
+                attribute(this.el.apiKey, 'placeholder', 'Gemini API key (optional)');
             }
         } catch {
             // Static hosting without the server: keep the API key field only.
@@ -332,7 +348,7 @@ export class App {
     /** @param {boolean} connected */
     #setConnected(connected) {
         const { el } = this;
-        el.connect.textContent = connected ? 'Disconnect' : 'Connect';
+        text(el.connect, connected ? 'Disconnect' : 'Connect');
         el.connect.classList.toggle('connected', connected);
         for (const control of [el.message, el.send, el.mic, el.camera, el.screen]) control.disabled = !connected;
         this.#setStatus(connected ? 'Connected' : 'Disconnected');
@@ -340,7 +356,8 @@ export class App {
 
     /** @param {string} text */
     #setStatus(text) {
-        this.el.status.textContent = text;
+        this.el.status.dataset.i18n = text;
+        this.el.status.textContent = t(text);
     }
 
     #bindClient() {
@@ -349,7 +366,7 @@ export class App {
         client.on('text', (/** @type {string} */ text) => log.stream('ai', text));
         client.on('outputtranscription', (/** @type {string} */ text) => log.stream('ai', text));
         client.on('inputtranscription', (/** @type {string} */ text) => log.stream('user', text));
-        client.on('thought', (/** @type {string} */ text) => log.add('debug', `Thinking: ${text}`));
+        client.on('thought', (/** @type {string} */ text) => log.add('debug', text, { raw: true }));
         client.on('interrupted', () => {
             player.clear();
             log.endStream('ai');
@@ -376,7 +393,7 @@ export class App {
             this.#stopMediaAndReset();
         });
         client.on('log', (/** @type {{type: string, message: string}} */ entry) => {
-            log.add('debug', `${entry.type}: ${entry.message}`);
+            log.add('debug', `${entry.type}: ${entry.message}`, { raw: true });
         });
         player.onLevel = (level) => this.#setLevel(this.el.outputLevel, level);
     }
@@ -415,7 +432,7 @@ export class App {
     #setToggle(button, active, icon, label) {
         button.classList.toggle('active', active);
         button.setAttribute('aria-pressed', String(active));
-        button.setAttribute('aria-label', label);
+        attribute(button, 'aria-label', label);
         setIcon(button, icon);
     }
 
