@@ -58,35 +58,18 @@ Deno.test('security headers: CSP only on HTML, HSTS only on https, immutable hea
     assertEquals(copied.headers.get('x-content-type-options'), 'nosniff');
 });
 
-Deno.test('credentials: client key, access password in either field, rejections', async () => {
+Deno.test('credentials: passwords never authorize relay, optional personal key or authenticated server selection', async () => {
     const config = loadConfig(env({ GEMINI_API_KEY: SERVER_KEY, ACCESS_PASSWORD: PASSWORD }));
-    assertEquals(await resolveCredentials({ apiKey: 'AIzaClientKey_0000000000' }, config), {
+    assertEquals(await resolveCredentials({ apiKey: 'test_personal_key_00000000' }, config), {
         ok: true,
-        apiKey: 'AIzaClientKey_0000000000',
+        apiKey: 'test_personal_key_00000000',
         source: 'client',
     });
-    assertEquals(await resolveCredentials({ accessPassword: PASSWORD }, config), {
-        ok: true,
-        apiKey: SERVER_KEY,
-        source: 'server',
-    });
-    assertEquals((await resolveCredentials({ apiKey: PASSWORD }, config)).ok, true);
-    assertEquals(await resolveCredentials({ accessPassword: 'wrong password!' }, config), {
-        ok: false,
-        reason: 'Invalid access password',
-    });
-    assertEquals(await resolveCredentials({}, config), { ok: false, reason: 'Missing API key' });
-    assertEquals(await resolveCredentials({ apiKey: 'bad key with spaces' }, config), {
-        ok: false,
-        reason: 'Malformed API key',
-    });
-    assertEquals(await resolveCredentials({ apiKey: 42 }, config), { ok: false, reason: 'Missing API key' });
-
-    const disabled = loadConfig(env({ GEMINI_API_KEY: SERVER_KEY }));
-    assertEquals(await resolveCredentials({ accessPassword: PASSWORD }, disabled), {
-        ok: false,
-        reason: 'Access password login is not enabled',
-    });
+    assertFalse((await resolveCredentials({ accessPassword: PASSWORD }, config)).ok);
+    assertFalse((await resolveCredentials({ apiKey: PASSWORD }, config)).ok);
+    assertEquals(await resolveCredentials({}, config), { ok: true, apiKey: SERVER_KEY, source: 'server' });
+    assertFalse((await resolveCredentials({ apiKey: 'bad key with spaces' }, config)).ok);
+    assertFalse((await resolveCredentials({}, loadConfig(env({})))).ok);
 });
 
 Deno.test('tokenFromHeaders reads Bearer, x-goog-api-key and api-key', () => {

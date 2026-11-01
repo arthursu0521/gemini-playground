@@ -30,7 +30,9 @@
     "jsr:@std/path@^1.0.8": "1.1.6",
     "jsr:@std/path@^1.1.6": "1.1.6",
     "jsr:@std/streams@^1.2.0": "1.2.0",
-    "jsr:@zip-js/zip-js@^2.7.52": "2.23.0"
+    "jsr:@zip-js/zip-js@^2.7.52": "2.23.0",
+    "npm:hash-wasm@4.12.0": "4.12.0",
+    "npm:ws@8.18.3": "8.18.3"
   },
   "jsr": {
     "@astral/astral@0.5.6": {
@@ -138,6 +140,14 @@
     },
     "@zip-js/zip-js@2.23.0": {
       "integrity": "d69cba3ef26191df72b752fa82db944520ac00330446db9ac80c795b8e6682d7"
+    }
+  },
+  "npm": {
+    "hash-wasm@4.12.0": {
+      "integrity": "sha512-+/2B2rYLb48I/evdOIhP+K/DD2ca2fgBjp6O+GBEnCDk2e4rpeXIK8GvIyRPjTezgmWn9gmKwkQjjx6BtqDHVQ=="
+    },
+    "ws@8.18.3": {
+      "integrity": "sha512-PEIGCY5tSlUt50cqyMXfCzX+oOPqN0vuGqWzbcJ2xvnkzkq46oOpz7dQaTDBdfICb4N14+GARUDw2XV2N4tvzg=="
     }
   },
   "workspace": {

@@ -104,7 +104,7 @@ export class MultimodalLiveClient extends EventEmitter {
             throw new ApplicationError('Already connected', ErrorCodes.INVALID_STATE);
         }
         this.setup = setup;
-        this.credentials = credentials;
+        this.credentials = credentials?.apiKey ? { apiKey: credentials.apiKey } : {};
         this.resumeHandle = null;
         this.state = 'connecting';
         try {

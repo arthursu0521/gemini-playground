@@ -29,6 +29,7 @@ const CONNECTING = 0;
 const MAX_QUEUED_BYTES = 8 * 1024 * 1024;
 
 export interface RelayOptions {
+    authenticated?: boolean;
     client: WebSocketLike;
     /** Request path, already validated against LIVE_WS_PATH_PATTERN. */
     path: string;
@@ -65,7 +66,7 @@ export function closeSocket(socket: WebSocketLike, code: number, reason: string)
 }
 
 export function relayLiveSession(options: RelayOptions): void {
-    const { client, path, searchParams, config, connectUpstream, logger, connectionId } = options;
+    const { client, path, searchParams, config, connectUpstream, logger, connectionId, authenticated } = options;
     const startedAt = Date.now();
     let upstream: WebSocketLike | null = null;
     // auth: waiting for the first message · authenticating/connecting: queue client frames
@@ -76,7 +77,7 @@ export function relayLiveSession(options: RelayOptions): void {
     let bytesDown = 0;
     let authTimer: ReturnType<typeof setTimeout> | undefined;
 
-    const finish = (code: number, reason: string, side: 'client' | 'upstream' | 'relay') => {
+    const finish = (code: number, _reason: string, side: 'client' | 'upstream' | 'relay') => {
         if (state === 'closed') return;
         state = 'closed';
         clearTimeout(authTimer);
@@ -85,7 +86,7 @@ export function relayLiveSession(options: RelayOptions): void {
             id: connectionId,
             by: side,
             code,
-            reason: reason || undefined,
+
             seconds: Math.round((Date.now() - startedAt) / 1000),
             bytesUp,
             bytesDown,
@@ -221,7 +222,11 @@ export function relayLiveSession(options: RelayOptions): void {
     // Credentials in the URL (legacy clients, ephemeral tokens) skip the auth message.
     const urlKey = searchParams.get('key');
     const accessToken = searchParams.get('access_token');
-    if (accessToken) {
+    if (authenticated) {
+        authTimer = setTimeout(() => {
+            if (state === 'auth') fail(RelayCloseCode.AUTH_TIMEOUT, 'No setup received');
+        }, config.authTimeoutMs);
+    } else if (accessToken) {
         openUpstream({ ok: true, apiKey: '', source: 'client' }, accessToken);
     } else if (urlKey) {
         void authenticate({ apiKey: urlKey });

@@ -30,11 +30,17 @@ function fakePlatform(overrides: Partial<Platform> = {}) {
 }
 
 const wsRequest = (path: string, headers: Record<string, string> = {}) =>
-    new Request(`https://play.example${path}`, { headers: { upgrade: 'websocket', ...headers } });
+    new Request(`https://play.example${path}`, {
+        headers: { upgrade: 'websocket', origin: 'https://play.example', ...headers },
+    });
 
 Deno.test('websocket upgrades from foreign origins are refused before upgrading (CSWSH)', async () => {
     const { platform, upgraded } = fakePlatform();
-    const app = createApp(loadConfig((n) => ({ ALLOWED_ORIGINS: 'https://friend.example' })[n]), platform, silent);
+    const app = createApp(
+        loadConfig((n) => ({ ALLOWED_ORIGINS: 'https://friend.example,https://play.example' })[n]),
+        platform,
+        silent,
+    );
     const res = await app.handle(wsRequest(LIVE_WS_PATH, { origin: 'https://evil.example' }), { clientIp: '1.2.3.4' });
     assertEquals(res.status, 403);
     assertEquals(upgraded.length, 0);

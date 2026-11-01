@@ -9,6 +9,7 @@ import { serveDir } from '@std/http/file-server';
 import { fromFileUrl } from '@std/path';
 import { createApp, type Platform } from './server/app.ts';
 import { loadConfig } from './server/config.ts';
+import { SessionAuth } from './server/session.ts';
 import type { Logger } from './server/log.ts';
 
 const STATIC_ROOT = fromFileUrl(new URL('./static', import.meta.url));
@@ -33,9 +34,20 @@ export function createDenoPlatform(staticRoot = STATIC_ROOT): Platform {
 
 export function createDenoHandler(
     env: (name: string) => string | undefined = (n) => Deno.env.get(n),
-    options: { logger?: Logger } = {},
+    options: { logger?: Logger; kv?: () => Promise<Deno.Kv> } = {},
 ) {
-    const app = createApp(loadConfig(env), createDenoPlatform(), options.logger);
+    const config = loadConfig(env);
+    const platform = createDenoPlatform();
+    let kv: Promise<Deno.Kv> | undefined;
+    if (config.accessPassword || config.accessPasswordHash) {
+        platform.sessions = new SessionAuth({
+            kv: options.kv ?? (() => kv ??= Deno.openKv()),
+            password: config.accessPassword,
+            passwordHash: config.accessPasswordHash,
+            passwordVersion: config.passwordVersion,
+        });
+    }
+    const app = createApp(config, platform, options.logger);
     return (req: Request, info: Deno.ServeHandlerInfo<Deno.NetAddr>) => {
         let clientIp = info.remoteAddr.hostname;
         if (env('TRUST_PROXY_HEADERS') === 'true') {

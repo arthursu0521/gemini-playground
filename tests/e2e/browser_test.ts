@@ -5,6 +5,7 @@
 // deno-lint-ignore-file no-explicit-any
 import { launch, type Page } from '@astral/astral';
 import { assert, assertEquals, assertStringIncludes } from '@std/assert';
+import { hashPassword } from '../../src/server/session.ts';
 import { decodeBase64 } from '@std/encoding/base64';
 import { startAppServer } from '../helpers/app_server.ts';
 import { type LiveConnection, startMockGemini } from '../helpers/mock_gemini.ts';
@@ -113,6 +114,7 @@ async function openPage(origin: string, chromePath: string | undefined) {
             '--use-fake-device-for-media-stream',
             '--autoplay-policy=no-user-gesture-required',
             '--no-first-run',
+            '--ignore-certificate-errors',
             '--no-default-browser-check',
             // GitHub's Ubuntu runners block Chrome's user-namespace sandbox (AppArmor).
             ...(Deno.build.os === 'linux' && Deno.env.get('CI') ? ['--no-sandbox'] : []),
@@ -125,7 +127,7 @@ async function openPage(origin: string, chromePath: string | undefined) {
     });
     page.addEventListener('pageerror', (e) => consoleErrors.push(String(e.detail)));
     await page.unsafelyGetCelestialBindings().Page.addScriptToEvaluateOnNewDocument({ source: INIT_SCRIPT });
-    await page.goto(origin, { waitUntil: 'networkidle0' });
+    await page.goto(origin, { waitUntil: 'load' });
     await page.waitForFunction(() => Boolean((globalThis as Record<string, unknown>).geminiPlayground));
     return { browser, page, consoleErrors };
 }
@@ -440,15 +442,51 @@ Deno.test({
     sanitizeResources: false,
     async fn() {
         const mock = startMockGemini({ validKeys: [SERVER_KEY], onMessage: geminiScript });
+        const kv = await Deno.openKv(':memory:');
+        const tlsDir = await Deno.makeTempDir();
+        const certPath = `${tlsDir}/cert.pem`, keyPath = `${tlsDir}/key.pem`;
+        const generated = await new Deno.Command('openssl', {
+            args: [
+                'req',
+                '-x509',
+                '-newkey',
+                'rsa:2048',
+                '-nodes',
+                '-keyout',
+                keyPath,
+                '-out',
+                certPath,
+                '-days',
+                '1',
+                '-subj',
+                '/CN=localhost',
+                '-addext',
+                'subjectAltName=IP:127.0.0.1,DNS:localhost',
+                '-addext',
+                'basicConstraints=critical,CA:FALSE',
+            ],
+            stdout: 'null',
+            stderr: 'piped',
+        }).output();
+        if (!generated.success) throw new Error('openssl test certificate generation failed');
         const app = startAppServer({
             UPSTREAM_BASE_URL: mock.baseUrl,
             GEMINI_API_KEY: SERVER_KEY,
-            ACCESS_PASSWORD: PASSWORD,
+            ACCESS_PASSWORD_HASH: await hashPassword(PASSWORD),
+        }, {
+            kv: () => Promise.resolve(kv),
+            tls: { cert: await Deno.readTextFile(certPath), key: await Deno.readTextFile(keyPath) },
         });
         const { browser, page } = await openPage(app.origin, chromePath);
         try {
-            await page.waitForFunction(() => !(document.getElementById('access-password') as HTMLInputElement).hidden);
-            await setValue(page, 'access-password', PASSWORD);
+            await page.waitForFunction(() => !document.getElementById('login-panel')!.hidden);
+            await setValue(page, 'login-password', PASSWORD);
+            await page.evaluate(() => (document.getElementById('login-form') as HTMLFormElement).requestSubmit());
+            await page.waitForFunction(() => document.getElementById('login-panel')!.hidden);
+            assertEquals(
+                await page.evaluate(() => (document.getElementById('login-password') as HTMLInputElement).value),
+                '',
+            );
             const next = mock.nextConnection();
             await click(page, 'connect-button');
             const conn = await next;
@@ -456,14 +494,33 @@ Deno.test({
             await page.waitForFunction(() => document.getElementById('status')?.textContent === 'Connected');
             await sendMessage(page, 'ping');
             await waitForLog(page, 'echo: ping');
-            const stored = await page.evaluate(() => JSON.stringify({ ...localStorage }));
+            const stored = await page.evaluate(() =>
+                JSON.stringify({ local: { ...localStorage }, session: { ...sessionStorage } })
+            );
             assert(!stored.includes(PASSWORD), 'password is never written to localStorage');
             const logs = app.logs.join('\n');
             assert(!logs.includes(PASSWORD) && !logs.includes(SERVER_KEY), 'no secrets in server logs');
+            // Simulate another instance logging out: idle session monitor must return UI to login.
+            for await (const entry of kv.list({ prefix: ['session'] })) await kv.delete(entry.key);
+            await new Promise((r) => setTimeout(r, 16000));
+            await page.waitForFunction(() => !document.getElementById('login-panel')!.hidden);
+            await setValue(page, 'login-password', PASSWORD);
+            await page.evaluate(() => (document.getElementById('login-form') as HTMLFormElement).requestSubmit());
+            await page.waitForFunction(() => document.getElementById('login-panel')!.hidden);
+            const resumed = mock.nextConnection();
+            await click(page, 'connect-button');
+            await resumed;
+            await page.waitForFunction(() => document.getElementById('status')?.textContent === 'Connected');
+            await click(page, 'logout-button');
+            await page.waitForFunction(() => !document.getElementById('login-panel')!.hidden);
+            const sessionStatus = await page.evaluate(async () => (await fetch('/auth/session')).status);
+            assertEquals(sessionStatus, 401);
         } finally {
             await browser.close();
             await app.close();
             await mock.close();
+            kv.close();
+            await Deno.remove(tlsDir, { recursive: true });
         }
     },
 });

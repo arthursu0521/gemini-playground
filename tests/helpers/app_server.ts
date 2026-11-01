@@ -9,7 +9,10 @@ export interface AppServer {
     close(): Promise<void>;
 }
 
-export function startAppServer(vars: Record<string, string>): AppServer {
+export function startAppServer(
+    vars: Record<string, string>,
+    options: { tls?: { cert: string; key: string }; kv?: () => Promise<Deno.Kv> } = {},
+): AppServer {
     const logs: string[] = [];
     const sink = {
         log: (l: string) => logs.push(l),
@@ -18,12 +21,12 @@ export function startAppServer(vars: Record<string, string>): AppServer {
     };
     const env = (name: string) => vars[name];
     const logger = createLogger('debug', [vars.GEMINI_API_KEY ?? '', vars.ACCESS_PASSWORD ?? ''], sink);
-    const handler = createDenoHandler(env, { logger });
-    const server = Deno.serve({ port: 0, hostname: '127.0.0.1', onListen: () => {} }, handler);
+    const handler = createDenoHandler(env, { logger, kv: options.kv });
+    const server = Deno.serve({ port: 0, hostname: '127.0.0.1', onListen: () => {}, ...options.tls }, handler);
     const { port } = server.addr as Deno.NetAddr;
     return {
-        origin: `http://127.0.0.1:${port}`,
-        wsOrigin: `ws://127.0.0.1:${port}`,
+        origin: `${options.tls ? 'https' : 'http'}://127.0.0.1:${port}`,
+        wsOrigin: `${options.tls ? 'wss' : 'ws'}://127.0.0.1:${port}`,
         logs,
         close: () => server.shutdown(),
     };

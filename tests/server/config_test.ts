@@ -57,5 +57,5 @@ Deno.test('UPSTREAM_BASE_URL must be https except for localhost', () => {
 Deno.test('publicConfig never exposes secrets', () => {
     const config = loadConfig(env({ GEMINI_API_KEY: 'AIzaSecretKey123', ACCESS_PASSWORD: 'correct horse battery' }));
     const text = JSON.stringify(publicConfig(config));
-    assertEquals(text, '{"serverKeyAvailable":true}');
+    assertEquals(text, '{"serverKeyAvailable":true,"sessionRequired":true}');
 });

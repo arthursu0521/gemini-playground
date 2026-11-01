@@ -5,7 +5,7 @@ UI based on: https://github.com/ViaAnthroposBenevolentia/gemini-2-live-api-demo 
 <html lang="en">
     <head>
         <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
         <meta name="referrer" content="no-referrer">
         <title>Gemini Live Playground</title>
         <link rel="icon" href="favicon.ico">
@@ -13,7 +13,30 @@ UI based on: https://github.com/ViaAnthroposBenevolentia/gemini-2-live-api-demo 
         <script type="module" src="js/main.js"></script>
     </head>
     <body>
+        <section id="login-panel" hidden>
+            <div class="brand-mark" aria-hidden="true">✦</div>
+            <p class="eyebrow">Gemini Live Playground</p>
+            <h1>Welcome back.</h1>
+            <p id="login-description"
+                class="subtitle">Your space to explore real-time AI. Sign in to start a conversation.</p>
+            <form id="login-form">
+                <label for="login-password">Access password</label>
+                <input id="login-password" type="password" autocomplete="current-password"
+                    aria-describedby="login-description login-error" placeholder="Enter your access password" required>
+                <button type="submit">Sign in</button>
+                <p id="login-error" role="alert"></p>
+            </form>
+            <p class="login-footer">A private workspace for voice, text, and vision.</p>
+        </section>
         <main id="app">
+            <header class="workspace-header">
+                <div class="brand-mark" aria-hidden="true">✦</div>
+                <div>
+                    <h1>Gemini Live</h1>
+                    <p class="subtitle">A little more conversation. A world of possibility.</p>
+                </div>
+                <span class="workspace-label">Live playground</span>
+            </header>
             <form id="auth-form" class="settings" autocomplete="off">
                 <label class="visually-hidden" for="api-key">Gemini API key</label>
                 <input type="password" id="api-key" placeholder="Gemini API key" spellcheck="false" autocomplete="off">
@@ -27,8 +50,16 @@ UI based on: https://github.com/ViaAnthroposBenevolentia/gemini-2-live-api-demo 
                     aria-expanded="false" aria-controls="config-container"></button>
             </form>
 
-            <section id="config-container" aria-label="Settings">
+            <section id="config-container" role="dialog" aria-modal="true" aria-labelledby="config-title" tabindex="-1">
                 <div class="config-wrapper">
+                    <div class="config-heading">
+                        <div>
+                            <h2 id="config-title">Session settings</h2>
+                            <p class="hint">Make this conversation your own.</p>
+                        </div>
+                        <button type="button" id="close-config" class="icon-button" data-icon="x"
+                            aria-label="Close settings"></button>
+                    </div>
                     <div class="setting-container">
                         <label class="setting-label" for="model-input">Model</label>
                         <input id="model-input" list="model-list" spellcheck="false">
@@ -61,6 +92,8 @@ UI based on: https://github.com/ViaAnthroposBenevolentia/gemini-2-live-api-demo 
                         <label
                             class="checkbox"><input type="checkbox" id="debug-toggle"> Show protocol details in the log</label>
                     </div>
+                    <div
+                        class="tools-note"><strong>Connected tools</strong><p class="hint">Google Search grounds answers on the web. The weather tool returns clearly labeled demo data. Tool activity appears in your conversation.</p></div>
                     <div class="config-actions">
                         <button type="button" id="forget-key" class="secondary">Forget saved key</button>
                         <button type="button" id="export-logs" class="secondary">Export logs</button>
@@ -71,12 +104,15 @@ UI based on: https://github.com/ViaAnthroposBenevolentia/gemini-2-live-api-demo 
             </section>
 
             <div class="toolbar">
+                <button type="button" id="logout-button" hidden>Sign out</button>
                 <button type="button" id="connect-button">Connect</button>
                 <span id="status" class="status" role="status" aria-live="polite">Disconnected</span>
-                <button type="button" id="clear-logs" class="secondary small">Clear</button>
+                <button type="button" id="clear-logs" class="secondary small"
+                    aria-label="Clear conversation">Clear</button>
             </div>
 
-            <div id="logs-container" role="log" aria-live="polite" aria-label="Conversation"></div>
+            <div class="conversation-heading"><h2>Conversation</h2><span>Voice · Text · Vision</span></div>
+            <div id="logs-container" role="log" aria-live="polite" aria-label="Conversation" tabindex="0"></div>
 
             <form id="message-form" class="input-controls">
                 <label class="visually-hidden" for="message-input">Message</label>

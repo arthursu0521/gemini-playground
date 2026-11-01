@@ -2,6 +2,7 @@
  * Integration tests: the real Deno server + relay, talking to a mock Gemini over real sockets.
  */
 import { assert, assertEquals, assertFalse, assertStringIncludes } from '@std/assert';
+import { WebSocket as HeaderWebSocket } from 'npm:ws@8.18.3';
 import { LIVE_WS_PATH } from '../../src/static/js/shared/protocol.js';
 import { startAppServer } from '../helpers/app_server.ts';
 import { startMockGemini } from '../helpers/mock_gemini.ts';
@@ -20,7 +21,10 @@ interface TestClient {
 }
 
 function connect(url: string): TestClient {
-    const ws = new WebSocket(url);
+    const ws = new HeaderWebSocket(url, {
+        headers: { origin: new URL(url).origin.replace(/^ws/, 'http') },
+    }) as unknown as WebSocket;
+    ws.addEventListener('error', () => {});
     ws.binaryType = 'arraybuffer';
     const received: Record<string, unknown>[] = [];
     const closed = new Promise<{ code: number; reason: string }>((resolve) =>
@@ -118,35 +122,15 @@ Deno.test({
 });
 
 Deno.test({
-    name: 'live: access password unlocks the server key',
+    name: 'live: configured password forbids HTTP upgrades, including personal key bypass',
     ...opts,
     async fn() {
         const env = setup({ GEMINI_API_KEY: SERVER_KEY, ACCESS_PASSWORD: PASSWORD });
-        const client = connect(env.liveUrl);
-        await client.opened;
-        client.ws.send(JSON.stringify({ auth: { accessPassword: PASSWORD } }));
-        client.ws.send(JSON.stringify({ setup: { model: 'models/x' } }));
-        const upstream = await env.mock.nextConnection();
-        assertEquals(upstream.key, SERVER_KEY);
-        await client.next((m) => 'setupComplete' in m);
-        client.ws.close();
-        await client.closed;
-        assertNoSecretsLogged(env.app.logs);
-        await env.close();
-    },
-});
-
-Deno.test({
-    name: 'live: wrong access password is rejected with 4401 and never reaches upstream',
-    ...opts,
-    async fn() {
-        const env = setup({ GEMINI_API_KEY: SERVER_KEY, ACCESS_PASSWORD: PASSWORD });
-        const client = connect(env.liveUrl);
-        await client.opened;
-        client.ws.send(JSON.stringify({ auth: { accessPassword: 'not the password' } }));
-        const { code, reason } = await client.closed;
-        assertEquals(code, 4401);
-        assertEquals(reason, 'Invalid access password');
+        const res = await fetch(`${env.app.origin}${LIVE_WS_PATH}?key=${CLIENT_KEY}`, {
+            headers: { upgrade: 'websocket', origin: env.app.origin },
+        });
+        assertEquals(res.status, 403);
+        await res.body?.cancel();
         assertEquals(env.mock.connections.length, 0);
         await env.close();
     },
@@ -309,7 +293,7 @@ Deno.test({
 });
 
 Deno.test({
-    name: 'openai: access password as bearer token uses the server key',
+    name: 'openai: access password bearer cannot bypass session authentication',
     ...opts,
     async fn() {
         const env = setup({ GEMINI_API_KEY: SERVER_KEY, ACCESS_PASSWORD: PASSWORD });
@@ -319,8 +303,8 @@ Deno.test({
             body: JSON.stringify({ model: 'gemini-x', messages: [] }),
         });
         await res.body?.cancel();
-        assertEquals(env.mock.restCalls[0].headers.get('authorization'), `Bearer ${SERVER_KEY}`);
-        assertEquals(JSON.parse(env.mock.restCalls[0].body).model, 'gemini-x');
+        assertEquals(res.status, 401);
+        assertEquals(env.mock.restCalls.length, 0);
         assertNoSecretsLogged(env.app.logs);
         await env.close();
     },
@@ -477,7 +461,7 @@ Deno.test({
     async fn() {
         const env = setup({ GEMINI_API_KEY: SERVER_KEY, ACCESS_PASSWORD: PASSWORD });
         const config = await fetch(`${env.app.origin}/api/config`);
-        assertEquals(await config.json(), { serverKeyAvailable: true });
+        assertEquals(await config.json(), { serverKeyAvailable: true, sessionRequired: true });
         const health = await fetch(`${env.app.origin}/healthz`);
         assertEquals(await health.text(), 'ok');
         await env.close();

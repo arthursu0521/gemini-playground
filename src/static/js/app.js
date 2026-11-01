@@ -114,6 +114,7 @@ export class App {
         });
         this.screen = new ScreenRecorder({ video: this.el.screenPreview, container: this.el.screenContainer });
         this.busy = false;
+        this.ensureSession = () => Promise.resolve(true);
     }
 
     start() {
@@ -165,7 +166,7 @@ export class App {
         /** @type {import('./settings.js').Settings} */
         const settings = {
             apiKey: el.apiKey.value.trim(),
-            accessPassword: el.accessPassword.value,
+            accessPassword: '',
             rememberKey: el.rememberKey.checked,
             model: el.model.value.trim() || CONFIG.DEFAULTS.MODEL,
             voice: el.voice.value || CONFIG.DEFAULTS.VOICE,
@@ -187,7 +188,7 @@ export class App {
             if (!res.ok) return;
             const config = await res.json();
             if (config.serverKeyAvailable) {
-                this.el.accessPassword.hidden = false;
+                this.el.accessPassword.hidden = true;
                 this.el.apiKey.placeholder = 'Gemini API key (optional)';
             }
         } catch {
@@ -204,10 +205,41 @@ export class App {
         const toggleConfig = () => {
             const open = el.configContainer.classList.toggle('active');
             el.configToggle.setAttribute('aria-expanded', String(open));
-            if (!open) this.#readSettings();
+            for (const child of /** @type {HTMLElement} */ (el.configContainer.parentElement).children) {
+                if (child !== el.configContainer) /** @type {HTMLElement} */ (child).inert = open;
+            }
+            if (open) {
+                document.getElementById('close-config')?.focus();
+            } else {
+                this.#readSettings();
+                el.configToggle.focus();
+            }
         };
         el.configToggle.addEventListener('click', toggleConfig);
         el.applyConfig.addEventListener('click', toggleConfig);
+        document.getElementById('close-config')?.addEventListener('click', toggleConfig);
+        el.configContainer.addEventListener('click', (event) => {
+            if (event.target === el.configContainer) toggleConfig();
+        });
+        document.addEventListener('keydown', (event) => {
+            if (!el.configContainer.classList.contains('active')) return;
+            if (event.key === 'Escape') {
+                event.preventDefault();
+                toggleConfig();
+            } else if (event.key === 'Tab') {
+                const controls = [...el.configContainer.querySelectorAll('button, input, select, textarea')]
+                    .filter((node) => /** @type {HTMLElement} */ (node).getClientRects().length);
+                const first = /** @type {HTMLElement} */ (controls[0]);
+                const last = /** @type {HTMLElement} */ (controls.at(-1));
+                if (event.shiftKey && document.activeElement === first) {
+                    event.preventDefault();
+                    last.focus();
+                } else if (!event.shiftKey && document.activeElement === last) {
+                    event.preventDefault();
+                    first.focus();
+                }
+            }
+        });
         el.debugToggle.addEventListener('change', () => {
             this.log.setShowDebug(el.debugToggle.checked);
             Logger.debugEnabled = el.debugToggle.checked;
@@ -253,12 +285,8 @@ export class App {
 
     async connect() {
         if (this.busy) return;
+        if (!await this.ensureSession()) return;
         const settings = this.#readSettings();
-        if (!settings.apiKey && !settings.accessPassword) {
-            this.log.add('error', 'Enter a Gemini API key (or the access password) first');
-            this.el.apiKey.focus();
-            return;
-        }
         this.busy = true;
         this.#setStatus('Connecting...');
         this.el.connect.disabled = true;
@@ -272,12 +300,12 @@ export class App {
             this.player.setMuted(settings.responseType === 'text');
             await this.client.connect(buildSetup(settings, this.tools), {
                 apiKey: settings.apiKey || undefined,
-                accessPassword: settings.accessPassword || undefined,
             });
             this.#setConnected(true);
             this.log.add('system', `Connected to ${settings.model}`);
         } catch (error) {
             Logger.error('Connection failed', error);
+            await this.ensureSession();
             this.log.add('error', `Connection failed: ${errorMessage(error)}`);
             this.#setConnected(false);
         } finally {

@@ -58,7 +58,7 @@ Deno.test('cloudflare: static requests go to the ASSETS binding with security he
 Deno.test('cloudflare: /api/config reflects bindings without leaking them', async () => {
     const env = { GEMINI_API_KEY: 'AIzaCfKey', ACCESS_PASSWORD: 'a long enough password' };
     const res = await worker.fetch(new Request('https://w.example/api/config'), env);
-    assertEquals(await res.json(), { serverKeyAvailable: true });
+    assertEquals(await res.json(), { serverKeyAvailable: true, sessionRequired: true });
 });
 
 Deno.test({
@@ -69,7 +69,7 @@ Deno.test({
         try {
             const env = { ASSETS: { fetch: () => Promise.resolve(new Response('x')) } };
             const req = new Request(`https://w.example${LIVE_WS_PATH}`, {
-                headers: { upgrade: 'websocket', 'cf-connecting-ip': '9.9.9.9' },
+                headers: { upgrade: 'websocket', origin: 'https://w.example', 'cf-connecting-ip': '9.9.9.9' },
             });
             const res = await worker.fetch(req, env) as Response & { webSocket?: unknown };
             const [client, server] = pairs.at(-1)!;

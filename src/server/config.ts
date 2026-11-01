@@ -9,6 +9,8 @@ export interface AppConfig {
     /** Server-side Gemini key. Only usable together with a valid access password. */
     geminiApiKey: string;
     accessPassword: string;
+    accessPasswordHash: string;
+    passwordVersion: string;
     /** True when the server key may be used (key + strong enough password configured). */
     serverKeyEnabled: boolean;
     /** Allowed browser origins; empty means any origin. Same-origin is always allowed. */
@@ -82,10 +84,13 @@ function readUpstream(get: EnvReader, warnings: string[]): string {
 export function loadConfig(get: EnvReader): AppConfig {
     const warnings: string[] = [];
     const geminiApiKey = (get('GEMINI_API_KEY') ?? '').trim();
-    const accessPassword = (get('ACCESS_PASSWORD') ?? '').trim();
+    const accessPasswordHash = (get('ACCESS_PASSWORD_HASH') ?? '').trim();
+    const accessPassword = accessPasswordHash ? '' : (get('ACCESS_PASSWORD') ?? '').trim();
 
     let serverKeyEnabled = false;
-    if (geminiApiKey && !accessPassword) {
+    if (geminiApiKey && accessPasswordHash) {
+        serverKeyEnabled = true;
+    } else if (geminiApiKey && !accessPassword) {
         warnings.push('GEMINI_API_KEY is set but ACCESS_PASSWORD is empty: the server key is disabled');
     } else if (geminiApiKey && accessPassword.length < MIN_ACCESS_PASSWORD_LENGTH) {
         warnings.push(
@@ -109,6 +114,8 @@ export function loadConfig(get: EnvReader): AppConfig {
     return {
         geminiApiKey,
         accessPassword,
+        accessPasswordHash,
+        passwordVersion: get('AUTH_PASSWORD_VERSION') ?? '1',
         serverKeyEnabled,
         allowedOrigins,
         rateLimitPerMinute: readInt(get, 'RATE_LIMIT_PER_MINUTE', 60, warnings),
@@ -128,5 +135,6 @@ export function loadConfig(get: EnvReader): AppConfig {
 export function publicConfig(config: AppConfig) {
     return {
         serverKeyAvailable: config.serverKeyEnabled,
+        sessionRequired: !!(config.accessPasswordHash || config.accessPassword),
     };
 }

@@ -69,6 +69,8 @@ export class SettingsStore {
 
     /** @returns {Settings} */
     load() {
+        this.session.remove('gemini_access_password');
+        this.local.remove('gemini_access_password');
         const local = this.local;
         const legacyKey = local.get(KEYS.apiKey);
         const rememberFlag = local.get(KEYS.rememberKey);
@@ -79,7 +81,7 @@ export class SettingsStore {
         return {
             apiKey,
             rememberKey,
-            accessPassword: this.session.get('gemini_access_password') ?? '',
+            accessPassword: '',
             model: local.get(KEYS.model) || CONFIG.DEFAULTS.MODEL,
             voice: local.get(KEYS.voice) || CONFIG.DEFAULTS.VOICE,
             language: local.get(KEYS.language) || CONFIG.DEFAULTS.LANGUAGE,
@@ -102,8 +104,8 @@ export class SettingsStore {
             local.remove(KEYS.apiKey);
         }
         // The access password only lives for the tab session.
-        if (settings.accessPassword) session.set('gemini_access_password', settings.accessPassword);
-        else session.remove('gemini_access_password');
+        session.remove('gemini_access_password');
+        local.remove('gemini_access_password');
         local.set(KEYS.model, settings.model);
         local.set(KEYS.voice, settings.voice);
         local.set(KEYS.language, settings.language);

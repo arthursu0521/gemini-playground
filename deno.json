@@ -2,19 +2,19 @@
     "tasks": {
         "start": {
             "description": "Run the server (loads .env when present)",
-            "command": "deno run --allow-net --allow-env --allow-read=./src/static,./.env src/deno_index.ts"
+            "command": "deno run --unstable-kv --allow-net --allow-env --allow-read=./src/static,./.env src/deno_index.ts"
         },
         "dev": {
             "description": "Run the server and restart on file changes",
-            "command": "deno run --watch --allow-net --allow-env --allow-read=./src/static,./.env src/deno_index.ts"
+            "command": "deno run --unstable-kv --watch --allow-net --allow-env --allow-read=./src/static,./.env src/deno_index.ts"
         },
         "test": {
             "description": "Unit + integration tests (no browser)",
-            "command": "deno test --allow-net --allow-env --allow-read tests/server tests/frontend"
+            "command": "deno test --unstable-kv --allow-net --allow-env --allow-read --allow-write tests/server tests/frontend"
         },
         "test:e2e": {
             "description": "End-to-end tests in headless Chrome against a mock Gemini server",
-            "command": "deno test --allow-net --allow-env --allow-read --allow-write --allow-run --allow-sys tests/e2e"
+            "command": "deno test --unstable-kv --allow-net --allow-env --allow-read --allow-write --allow-run --allow-sys tests/e2e"
         },
         "smoke": {
             "description": "Smoke test against the real Gemini API (uses GEMINI_API_KEY when set)",
@@ -55,7 +55,8 @@
             "deno.window",
             "dom",
             "dom.iterable",
-            "dom.asynciterable"
+            "dom.asynciterable",
+            "deno.unstable"
         ]
     },
     "fmt": {
