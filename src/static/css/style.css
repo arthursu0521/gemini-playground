@@ -506,7 +506,6 @@ body:has(#login-panel:not([hidden])) {
     display: flex;
     align-items: center;
     gap: 12px;
-    padding-top: 60px;
     margin-bottom: 24px;
 }
 .login-brand .brand-mark {
@@ -777,8 +776,29 @@ body:has(#login-panel:not([hidden])) {
     white-space: nowrap;
 }
 #login-panel .ui-preferences {
-    top: 28px;
-    right: 24px;
+    position: static;
+    margin-left: auto;
+    flex-shrink: 0;
+}
+@media (max-width: 639px) {
+    #login-panel {
+        padding-inline: 12px;
+    }
+    .login-brand {
+        gap: 8px;
+    }
+    .login-brand .brand-mark {
+        width: 32px;
+        height: 32px;
+    }
+    #login-panel .eyebrow {
+        font-size: 24px;
+        white-space: nowrap;
+    }
+    #login-panel .ui-preferences button {
+        width: 44px;
+        padding-inline: 0;
+    }
 }
 .workspace-header {
     padding-top: 60px;

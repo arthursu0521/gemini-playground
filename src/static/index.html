@@ -17,17 +17,17 @@ UI based on: https://github.com/ViaAnthroposBenevolentia/gemini-2-live-api-demo 
             <div class="login-brand">
                 <div class="brand-mark" aria-hidden="true">✦</div>
                 <p class="eyebrow" data-i18n="CTS AI Pal">CTS AI Pal</p>
+                <div class="ui-preferences">
+                    <button type="button" id="login-ui-language" class="secondary" data-ui-language
+                        aria-label="界面语言：简体中文">简体中文</button>
+                    <button type="button" id="login-ui-theme" class="secondary" data-ui-theme
+                        aria-label="外观：跟随系统">跟随系统</button>
+                </div>
             </div>
             <h1 data-i18n="Welcome back.">Welcome back.</h1>
             <p id="login-description"
                 class="subtitle"
                 data-i18n="Your space to explore real-time AI. Sign in to start a conversation.">Your space to explore real-time AI. Sign in to start a conversation.</p>
-            <div class="ui-preferences">
-                <button type="button" id="login-ui-language" class="secondary" data-ui-language
-                    aria-label="界面语言：简体中文">简体中文</button>
-                <button type="button" id="login-ui-theme" class="secondary" data-ui-theme
-                    aria-label="外观：跟随系统">跟随系统</button>
-            </div>
             <form id="login-form">
                 <label for="login-password" data-i18n="Access password">Access password</label>
                 <input id="login-password" type="password" autocomplete="current-password"

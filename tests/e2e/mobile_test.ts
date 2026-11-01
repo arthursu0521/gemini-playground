@@ -189,7 +189,8 @@ Deno.test({
                             const color = getComputedStyle(mark).color;
                             const controls = document.querySelector('#login-panel .ui-preferences')!
                                 .getBoundingClientRect();
-                            return m.top >= controls.bottom + 8 &&
+                            return Math.abs((m.top + m.bottom) / 2 - (controls.top + controls.bottom) / 2) < 1 &&
+                                b.right + 8 <= controls.left &&
                                 Math.abs((m.top + m.bottom) / 2 - (b.top + b.bottom) / 2) < 1 &&
                                 b.left >= m.right && parseFloat(getComputedStyle(brand).fontSize) >= 24 &&
                                 [brand, document.querySelector('#app h1')!, document.querySelector('.workspace-label')!]

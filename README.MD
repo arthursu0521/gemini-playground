@@ -89,7 +89,7 @@ deno task start           # 打开 http://localhost:8000
 | 变量 | 默认值 | 说明 |
 | --- | --- | --- |
 | `GEMINI_API_KEY` | 空 | 服务器端 Key。必须同时设置 `ACCESS_PASSWORD` 才会启用。 |
-| `ACCESS_PASSWORD` | 空 | 访问密码，至少 12 位。访问者输入它即可使用服务器端 Key（网页和 API 都适用）。 |
+| `ACCESS_PASSWORD` | 空 | 访问密码，不能为空，建议至少 12 位。访问者输入它即可使用服务器端 Key（网页和 API 都适用）。 |
 | `ALLOWED_ORIGINS` | 空（任意来源） | 允许调用的网页来源，逗号分隔。同源请求始终允许。设置后可防止别人的网站盗用你的部署。 |
 | `RATE_LIMIT_PER_MINUTE` | `60` | 每个 IP 每分钟 API 请求数，`0` 为不限。 |
 | `WS_CONNECTIONS_PER_MINUTE` | `10` | 每个 IP 每分钟新建实时会话数，`0` 为不限。 |

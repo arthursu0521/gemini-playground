@@ -5,14 +5,13 @@
 // deno-lint-ignore-file no-explicit-any
 import { launch, type Page } from '@astral/astral';
 import { assert, assertEquals, assertStringIncludes } from '@std/assert';
-import { hashPassword } from '../../src/server/session.ts';
 import { decodeBase64 } from '@std/encoding/base64';
 import { startAppServer } from '../helpers/app_server.ts';
 import { type LiveConnection, startMockGemini } from '../helpers/mock_gemini.ts';
 
 const CLIENT_KEY = 'AIzaTestKeyValid_0000000000000000000';
 const SERVER_KEY = 'AIzaServerKeyValid_00000000000000000';
-const PASSWORD = 'correct horse battery staple';
+const PASSWORD = 'brief-pass';
 
 function findChrome(): string | undefined {
     const candidates = [
@@ -476,7 +475,7 @@ Deno.test({
         const app = startAppServer({
             UPSTREAM_BASE_URL: mock.baseUrl,
             GEMINI_API_KEY: SERVER_KEY,
-            ACCESS_PASSWORD_HASH: await hashPassword(PASSWORD),
+            ACCESS_PASSWORD: PASSWORD,
         }, {
             kv: () => Promise.resolve(kv),
             tls: { cert: await Deno.readTextFile(certPath), key: await Deno.readTextFile(keyPath) },

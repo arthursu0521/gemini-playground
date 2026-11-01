@@ -16,13 +16,14 @@ Deno.test('defaults: no server key, sensible limits, Google upstream', () => {
     assertEquals(config.warnings, []);
 });
 
-Deno.test('server key requires an access password of at least 12 characters', () => {
+Deno.test('server key requires a nonempty password; short console passwords warn but remain usable', () => {
     const noPassword = loadConfig(env({ GEMINI_API_KEY: 'AIzaKey' }));
     assertEquals(noPassword.serverKeyEnabled, false);
     assert(noPassword.warnings.some((w) => w.includes('ACCESS_PASSWORD is empty')));
 
     const weak = loadConfig(env({ GEMINI_API_KEY: 'AIzaKey', ACCESS_PASSWORD: 'short' }));
-    assertEquals(weak.serverKeyEnabled, false);
+    assertEquals(weak.serverKeyEnabled, true);
+    assertEquals(publicConfig(weak), { serverKeyAvailable: true, sessionRequired: true });
     assert(weak.warnings.some((w) => w.includes('shorter than 12')));
 
     const strong = loadConfig(env({ GEMINI_API_KEY: 'AIzaKey', ACCESS_PASSWORD: 'correct horse battery' }));

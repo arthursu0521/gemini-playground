@@ -70,7 +70,7 @@ Every variable is optional; with none set, visitors use their own Gemini API key
 | Variable | Default | Description |
 | --- | --- | --- |
 | `GEMINI_API_KEY` | empty | Server-side key. Only enabled together with `ACCESS_PASSWORD`. |
-| `ACCESS_PASSWORD` | empty | At least 12 characters. Visitors who enter it use the server-side key (UI and API). |
+| `ACCESS_PASSWORD` | empty | Nonempty; at least 12 characters recommended. Visitors who enter it use the server-side key (UI and API). |
 | `ALLOWED_ORIGINS` | empty (any) | Comma-separated browser origins allowed to use the deployment. Same-origin is always allowed. |
 | `RATE_LIMIT_PER_MINUTE` | `60` | API requests per minute per client IP (`0` = unlimited). |
 | `WS_CONNECTIONS_PER_MINUTE` | `10` | New live sessions per minute per client IP (`0` = unlimited). |

@@ -11,7 +11,7 @@ export interface AppConfig {
     accessPassword: string;
     accessPasswordHash: string;
     passwordVersion: string;
-    /** True when the server key may be used (key + strong enough password configured). */
+    /** True when the server key may be used (key + nonempty password configured). */
     serverKeyEnabled: boolean;
     /** Allowed browser origins; empty means any origin. Same-origin is always allowed. */
     allowedOrigins: string[];
@@ -93,8 +93,9 @@ export function loadConfig(get: EnvReader): AppConfig {
     } else if (geminiApiKey && !accessPassword) {
         warnings.push('GEMINI_API_KEY is set but ACCESS_PASSWORD is empty: the server key is disabled');
     } else if (geminiApiKey && accessPassword.length < MIN_ACCESS_PASSWORD_LENGTH) {
+        serverKeyEnabled = true;
         warnings.push(
-            `ACCESS_PASSWORD is shorter than ${MIN_ACCESS_PASSWORD_LENGTH} characters: the server key is disabled`,
+            `ACCESS_PASSWORD is shorter than ${MIN_ACCESS_PASSWORD_LENGTH} characters: use a longer password for better security`,
         );
     } else if (geminiApiKey) {
         serverKeyEnabled = true;

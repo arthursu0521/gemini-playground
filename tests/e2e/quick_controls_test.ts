@@ -15,6 +15,18 @@ async function checkLanguage(page: Page, prefix: string) {
             [brand, brand, brand, brand],
             'login, workspace and browser title use the localized CTS brand',
         );
+        if (prefix === 'login-') {
+            assert(
+                await page.evaluate(() => {
+                    const brand = document.querySelector('#login-panel .eyebrow')!.getBoundingClientRect();
+                    const buttons = document.querySelector('#login-panel .ui-preferences')!.getBoundingClientRect();
+                    return brand.right + 8 <= buttons.left &&
+                        Math.abs((brand.top + brand.bottom) - (buttons.top + buttons.bottom)) < 2 &&
+                        document.documentElement.scrollWidth <= innerWidth;
+                }),
+                'both languages keep the login title and switches aligned without overlap',
+            );
+        }
         const label = language === 'en' ? 'Interface language: English' : '界面语言: 简体中文';
         assertEquals(
             await page.evaluate((prefix) => {
